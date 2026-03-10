@@ -320,7 +320,8 @@ def get_user_from_session(cookie):
 # The "@app.route" decorator is sugar for calling app.add_url_rule
 @app.route("/")
 def index():
-    return render_template("index.html", name="TODO")
+    mapbox_token = os.getenv("MAPBOX_TOKEN")
+    return render_template("maps-test.html", mapbox_token=mapbox_token)
 
 @app.route("/map")
 def map_page():
