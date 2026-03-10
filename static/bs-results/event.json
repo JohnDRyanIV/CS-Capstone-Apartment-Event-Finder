@@ -1,0 +1,564 @@
+{
+  "count": 54,
+  "overflow": false,
+  "next": "https://api.predicthq.com/v1/events/?limit=5&offset=5&q=music&start.gte=2026-03-01&within=8mi%4041.5868353%2C-93.6249593",
+  "previous": null,
+  "results": [
+    {
+      "relevance": 63.695587,
+      "id": "84S33HDdHPtdSq7w3D",
+      "title": "Vibrant Music",
+      "description": "Sourced from predicthq.com",
+      "category": "community",
+      "rank": 34,
+      "local_rank": 58,
+      "phq_attendance": 150,
+      "entities": [],
+      "duration": 2700,
+      "start": "2026-04-09T23:15:00Z",
+      "start_local": "2026-04-09T18:15:00",
+      "end": "2026-04-10T00:00:00Z",
+      "end_local": "2026-04-09T19:00:00",
+      "updated": "2026-02-15T02:47:13Z",
+      "first_seen": "2026-02-15T02:39:23Z",
+      "timezone": "America/Chicago",
+      "location": [
+        -93.77593,
+        41.60972
+      ],
+      "geo": {
+        "geometry": {
+          "coordinates": [
+            -93.77593,
+            41.60972
+          ],
+          "type": "Point"
+        },
+        "placekey": "1ephiy2dha@5nz-vkf-3kf",
+        "address": {
+          "country_code": "US",
+          "formatted_address": "Northwest 114th Street, Clive, IA 50325, United States of America",
+          "locality": "Clive",
+          "postcode": "50325",
+          "region": "Iowa"
+        }
+      },
+      "impact_patterns": [
+        {
+          "vertical": "accommodation",
+          "impact_type": "phq_attendance",
+          "impacts": [
+            {
+              "date_local": "2026-04-09",
+              "value": 150,
+              "position": "event_day"
+            }
+          ]
+        },
+        {
+          "vertical": "hospitality",
+          "impact_type": "phq_attendance",
+          "impacts": [
+            {
+              "date_local": "2026-04-09",
+              "value": 150,
+              "position": "event_day"
+            }
+          ]
+        },
+        {
+          "vertical": "retail",
+          "impact_type": "phq_attendance",
+          "impacts": [
+            {
+              "date_local": "2026-04-09",
+              "value": 150,
+              "position": "event_day"
+            }
+          ]
+        }
+      ],
+      "scope": "locality",
+      "country": "US",
+      "place_hierarchies": [
+        [
+          "6295630",
+          "6255149",
+          "6252001",
+          "4862182",
+          "4871782",
+          "4880589",
+          "4850296"
+        ],
+        [
+          "6295630",
+          "6255149",
+          "6252001",
+          "4862182",
+          "4871782",
+          "4864412",
+          "4853828"
+        ]
+      ],
+      "state": "active",
+      "brand_safe": true,
+      "private": false,
+      "predicted_event_spend": 1758,
+      "predicted_event_spend_industries": {
+        "accommodation": 0,
+        "hospitality": 1156,
+        "transportation": 602
+      },
+      "phq_labels": [
+        {
+          "label": "education",
+          "weight": 0.414
+        },
+        {
+          "label": "family-fun",
+          "weight": 0.381
+        },
+        {
+          "label": "music",
+          "weight": 0.205
+        }
+      ]
+    },
+    {
+      "relevance": 51.76048,
+      "id": "Ciqa2gYSGVPkcxmkBe",
+      "title": "An Evening of Poetry & Music",
+      "description": "Sourced from predicthq.com",
+      "category": "community",
+      "rank": 27,
+      "local_rank": 50,
+      "phq_attendance": 73,
+      "entities": [],
+      "duration": 0,
+      "start": "2026-03-25T23:30:00Z",
+      "start_local": "2026-03-25T18:30:00",
+      "end": "2026-03-25T23:30:00Z",
+      "end_local": "2026-03-25T18:30:00",
+      "updated": "2026-02-15T04:02:52Z",
+      "first_seen": "2026-02-15T02:27:12Z",
+      "timezone": "America/Chicago",
+      "location": [
+        -93.75716,
+        41.58382
+      ],
+      "geo": {
+        "geometry": {
+          "coordinates": [
+            -93.75716,
+            41.58382
+          ],
+          "type": "Point"
+        },
+        "placekey": "1k77q7bfoo@5nz-vkp-j9z",
+        "address": {
+          "country_code": "US",
+          "formatted_address": "Ashworth Road, West Des Moines, IA 50265, United States of America",
+          "locality": "West Des Moines",
+          "postcode": "50265",
+          "region": "Iowa"
+        }
+      },
+      "impact_patterns": [
+        {
+          "vertical": "accommodation",
+          "impact_type": "phq_attendance",
+          "impacts": [
+            {
+              "date_local": "2026-03-25",
+              "value": 73,
+              "position": "event_day"
+            }
+          ]
+        },
+        {
+          "vertical": "hospitality",
+          "impact_type": "phq_attendance",
+          "impacts": [
+            {
+              "date_local": "2026-03-25",
+              "value": 73,
+              "position": "event_day"
+            }
+          ]
+        },
+        {
+          "vertical": "retail",
+          "impact_type": "phq_attendance",
+          "impacts": [
+            {
+              "date_local": "2026-03-25",
+              "value": 73,
+              "position": "event_day"
+            }
+          ]
+        }
+      ],
+      "scope": "locality",
+      "country": "US",
+      "place_hierarchies": [
+        [
+          "6295630",
+          "6255149",
+          "6252001",
+          "4862182",
+          "4871782",
+          "4880589",
+          "4847261"
+        ],
+        [
+          "6295630",
+          "6255149",
+          "6252001",
+          "4862182",
+          "4871782",
+          "4864412",
+          "4853828"
+        ]
+      ],
+      "state": "active",
+      "brand_safe": true,
+      "private": false,
+      "predicted_event_spend": 855,
+      "predicted_event_spend_industries": {
+        "accommodation": 0,
+        "hospitality": 562,
+        "transportation": 293
+      },
+      "phq_labels": [
+        {
+          "label": "cultural",
+          "weight": 1.0
+        }
+      ]
+    },
+    {
+      "relevance": 50.29214,
+      "id": "Fpi5gSRofP5qoJH5o4",
+      "title": "CLASS: Early Childhood Music Exploration",
+      "description": "Sourced from predicthq.com",
+      "category": "community",
+      "rank": 31,
+      "local_rank": 51,
+      "phq_attendance": 106,
+      "entities": [],
+      "duration": 2700,
+      "start": "2026-04-23T22:30:00Z",
+      "start_local": "2026-04-23T17:30:00",
+      "end": "2026-04-23T23:15:00Z",
+      "end_local": "2026-04-23T18:15:00",
+      "updated": "2026-02-22T04:43:24Z",
+      "first_seen": "2026-02-22T02:56:52Z",
+      "timezone": "America/Chicago",
+      "location": [
+        -93.63828,
+        41.58886
+      ],
+      "geo": {
+        "geometry": {
+          "coordinates": [
+            -93.63828,
+            41.58886
+          ],
+          "type": "Point"
+        },
+        "placekey": "1ouai3wird@5nz-vk3-tjv",
+        "address": {
+          "country_code": "US",
+          "formatted_address": "Woodland Avenue, Des Moines, IA 50314, United States of America",
+          "locality": "Des Moines",
+          "postcode": "50314",
+          "region": "Iowa"
+        }
+      },
+      "impact_patterns": [
+        {
+          "vertical": "accommodation",
+          "impact_type": "phq_attendance",
+          "impacts": [
+            {
+              "date_local": "2026-04-23",
+              "value": 106,
+              "position": "event_day"
+            }
+          ]
+        },
+        {
+          "vertical": "hospitality",
+          "impact_type": "phq_attendance",
+          "impacts": [
+            {
+              "date_local": "2026-04-23",
+              "value": 106,
+              "position": "event_day"
+            }
+          ]
+        },
+        {
+          "vertical": "retail",
+          "impact_type": "phq_attendance",
+          "impacts": [
+            {
+              "date_local": "2026-04-23",
+              "value": 106,
+              "position": "event_day"
+            }
+          ]
+        }
+      ],
+      "scope": "locality",
+      "country": "US",
+      "place_hierarchies": [
+        [
+          "6295630",
+          "6255149",
+          "6252001",
+          "4862182",
+          "4871782",
+          "4864412",
+          "4853828"
+        ]
+      ],
+      "state": "active",
+      "brand_safe": true,
+      "private": false,
+      "predicted_event_spend": 1242,
+      "predicted_event_spend_industries": {
+        "accommodation": 0,
+        "hospitality": 817,
+        "transportation": 425
+      },
+      "phq_labels": [
+        {
+          "label": "family-fun",
+          "weight": 0.7
+        },
+        {
+          "label": "music",
+          "weight": 0.3
+        }
+      ]
+    },
+    {
+      "relevance": 46.61309,
+      "id": "6ZfLDid9sk8RBNXqb5",
+      "title": "Celebrating Music: Spring Concert",
+      "description": "Sourced from predicthq.com",
+      "category": "concerts",
+      "rank": 36,
+      "local_rank": 61,
+      "phq_attendance": 205,
+      "entities": [],
+      "duration": 0,
+      "start": "2026-03-22T19:00:00Z",
+      "start_local": "2026-03-22T14:00:00",
+      "end": "2026-03-22T19:00:00Z",
+      "end_local": "2026-03-22T14:00:00",
+      "updated": "2026-01-11T04:52:10Z",
+      "first_seen": "2026-01-11T02:41:58Z",
+      "timezone": "America/Chicago",
+      "location": [
+        -93.72497,
+        41.57796
+      ],
+      "geo": {
+        "geometry": {
+          "coordinates": [
+            -93.72497,
+            41.57796
+          ],
+          "type": "Point"
+        },
+        "placekey": "zzw-222@5nz-vjx-3yv",
+        "address": {
+          "country_code": "US",
+          "formatted_address": "Vine Street, West Des Moines, IA 50265, United States of America",
+          "locality": "West Des Moines",
+          "postcode": "50265",
+          "region": "Iowa"
+        }
+      },
+      "impact_patterns": [
+        {
+          "vertical": "accommodation",
+          "impact_type": "phq_attendance",
+          "impacts": [
+            {
+              "date_local": "2026-03-22",
+              "value": 205,
+              "position": "event_day"
+            }
+          ]
+        },
+        {
+          "vertical": "hospitality",
+          "impact_type": "phq_attendance",
+          "impacts": [
+            {
+              "date_local": "2026-03-22",
+              "value": 205,
+              "position": "event_day"
+            }
+          ]
+        },
+        {
+          "vertical": "retail",
+          "impact_type": "phq_attendance",
+          "impacts": [
+            {
+              "date_local": "2026-03-22",
+              "value": 205,
+              "position": "event_day"
+            }
+          ]
+        }
+      ],
+      "scope": "locality",
+      "country": "US",
+      "place_hierarchies": [
+        [
+          "6295630",
+          "6255149",
+          "6252001",
+          "4862182",
+          "4871782",
+          "4880589",
+          "4881608"
+        ],
+        [
+          "6295630",
+          "6255149",
+          "6252001",
+          "4862182",
+          "4871782",
+          "4864412",
+          "4853828"
+        ]
+      ],
+      "state": "active",
+      "brand_safe": true,
+      "private": false,
+      "predicted_event_spend": 3753,
+      "predicted_event_spend_industries": {
+        "accommodation": 0,
+        "hospitality": 2107,
+        "transportation": 1645
+      }
+    },
+    {
+      "relevance": 46.5854,
+      "id": "88bywTE2FjCnpGCqTC",
+      "title": "Meredith Willson\u2019s The Music Man",
+      "description": "Sourced from predicthq.com",
+      "category": "performing-arts",
+      "rank": 33,
+      "local_rank": 55,
+      "phq_attendance": 145,
+      "entities": [],
+      "duration": 9000,
+      "start": "2026-03-21T00:00:00Z",
+      "start_local": "2026-03-20T19:00:00",
+      "end": "2026-03-21T02:30:00Z",
+      "end_local": "2026-03-20T21:30:00",
+      "updated": "2025-07-27T00:57:05Z",
+      "first_seen": "2025-05-11T00:53:43Z",
+      "timezone": "America/Chicago",
+      "location": [
+        -93.62049,
+        41.58729
+      ],
+      "geo": {
+        "geometry": {
+          "coordinates": [
+            -93.62049,
+            41.58729
+          ],
+          "type": "Point"
+        },
+        "placekey": "1olnphi4h7@5nz-vrc-ct9",
+        "address": {
+          "country_code": "US",
+          "formatted_address": "Walnut Street, Des Moines, IA 50309, United States of America",
+          "locality": "Des Moines",
+          "postcode": "50309",
+          "region": "Iowa"
+        }
+      },
+      "impact_patterns": [
+        {
+          "vertical": "accommodation",
+          "impact_type": "phq_attendance",
+          "impacts": [
+            {
+              "date_local": "2026-03-20",
+              "value": 145,
+              "position": "event_day"
+            }
+          ]
+        },
+        {
+          "vertical": "hospitality",
+          "impact_type": "phq_attendance",
+          "impacts": [
+            {
+              "date_local": "2026-03-20",
+              "value": 145,
+              "position": "event_day"
+            }
+          ]
+        },
+        {
+          "vertical": "retail",
+          "impact_type": "phq_attendance",
+          "impacts": [
+            {
+              "date_local": "2026-03-20",
+              "value": 145,
+              "position": "event_day"
+            }
+          ]
+        }
+      ],
+      "scope": "locality",
+      "country": "US",
+      "place_hierarchies": [
+        [
+          "6295630",
+          "6255149",
+          "6252001",
+          "4862182",
+          "4871782",
+          "4864412",
+          "4853828"
+        ]
+      ],
+      "state": "active",
+      "brand_safe": true,
+      "private": false,
+      "predicted_event_spend": 2591,
+      "predicted_event_spend_industries": {
+        "accommodation": 0,
+        "hospitality": 1454,
+        "transportation": 1136
+      },
+      "phq_labels": [
+        {
+          "label": "family-theatre",
+          "weight": 0.488
+        },
+        {
+          "label": "concert",
+          "weight": 0.296
+        },
+        {
+          "label": "lifestyle",
+          "weight": 0.216
+        }
+      ]
+    }
+  ]
+}

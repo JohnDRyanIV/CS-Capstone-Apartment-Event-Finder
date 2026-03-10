@@ -29,6 +29,8 @@ if "WEBSITE_HOSTNAME" not in os.environ:
 # Load the connection string from the environment variable.
 CONNECTION_STRING = os.environ["AZURE_SQL_CONNECTIONSTRING"]
 APP_SECRET = os.environ["FLASK_SECRET_KEY"]
+MAPBOX_TOKEN = os.environ["MAPBOX_TOKEN"]
+GEOCODE_TOKEN = os.environ["GEOCODE_TOKEN"]
 
 
 # Initialize the flask app here
@@ -320,6 +322,10 @@ def get_user_from_session(cookie):
 def index():
     return render_template("index.html", name="TODO")
 
+@app.route("/map")
+def map_page():
+    mapbox_token = os.getenv("MAPBOX_TOKEN")
+    return render_template("maps-test.html", mapbox_token=mapbox_token)
 
 @app.route("/signup")
 def signup_form():

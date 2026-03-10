@@ -7,6 +7,9 @@ __pycache__/
 *.py[cod]
 *.pyo
 
+# Playwright user data (for scraping, not commit)
+playwright-user-data
+
 # VS Code settings
 .vscode/
 
@@ -34,3 +37,9 @@ git-password.txt
 
 # Quick testing
 test.py
+bs-test/
+
+# Other
+scraper.py
+scraper2.py
+geocoder.py
