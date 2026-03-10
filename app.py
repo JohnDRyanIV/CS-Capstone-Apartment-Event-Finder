@@ -30,7 +30,6 @@ if "WEBSITE_HOSTNAME" not in os.environ:
 CONNECTION_STRING = os.environ["AZURE_SQL_CONNECTIONSTRING"]
 APP_SECRET = os.environ["FLASK_SECRET_KEY"]
 MAPBOX_TOKEN = os.environ["MAPBOX_TOKEN"]
-GEOCODE_TOKEN = os.environ["GEOCODE_TOKEN"]
 
 
 # Initialize the flask app here
