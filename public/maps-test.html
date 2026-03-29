@@ -4,19 +4,10 @@
     <meta charset="utf-8">
     <title>Des Moines Apartment Map</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet">
-
     <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
-
-        #map {
-            width: 100%;
-            height: 100vh;
-        }
+        body { margin: 0; font-family: Arial, sans-serif; }
+        #map { width: 100%; height: 100vh; }
 
         .legend {
             position: absolute;
@@ -30,17 +21,9 @@
             z-index: 1;
         }
 
-        .popup h3 {
-            margin: 0 0 6px 0;
-        }
-
-        .popup p {
-            margin: 3px 0;
-        }
-
-        .popup ul {
-            margin: 4px 0 6px 16px;
-        }
+        .popup h3 { margin: 0 0 6px 0; }
+        .popup p  { margin: 3px 0; }
+        .popup ul { margin: 4px 0 6px 16px; }
     </style>
 </head>
 <body>
@@ -54,7 +37,6 @@
 <div id="map"></div>
 
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
-
 <script>
 mapboxgl.accessToken = "{{ mapbox_token }}";
 
@@ -65,90 +47,176 @@ const map = new mapboxgl.Map({
     zoom: 11
 });
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
-function escapeHtml(text){
-    if(!text) return "";
+function escapeHtml(text) {
+    if (!text) return "";
     return String(text)
-        .replace(/&/g,"&amp;")
-        .replace(/</g,"&lt;")
-        .replace(/>/g,"&gt;");
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-
-function buildBedsRent(rentData){
-    if(!rentData || Object.keys(rentData).length === 0){
+function buildBedsRent(rentData) {
+    if (!rentData || Object.keys(rentData).length === 0)
         return "<p><strong>Rent:</strong> N/A</p>";
-    }
-
     let html = "<p><strong>Rent:</strong></p><ul>";
-
-    for(const [bed, price] of Object.entries(rentData)){
+    for (const [bed, price] of Object.entries(rentData))
         html += `<li>${escapeHtml(bed)} — ${escapeHtml(price)}</li>`;
-    }
-
-    html += "</ul>";
-    return html;
+    return html + "</ul>";
 }
 
-
-fetch("/static/bs-results/apartments-test.json")
-.then(res => res.json())
-.then(apartments => {
-
-    apartments.forEach(apt => {
-
-        if(!apt.lat || !apt.lon) return;
-
-        const title = apt.title || apt.address || "Apartment";
-        const address = apt.address || "Unknown address";
-        const phone = apt.phone_number || "N/A";
-        const link = apt.link || null;
-
-        const popupHTML = `
+function buildPopupHTML(apt) {
+    const title   = apt.title   || apt.address || "Apartment";
+    const address = apt.address || "Unknown address";
+    const phone   = apt.phone_number || "N/A";
+    const link    = apt.link || null;
+    return `
         <div class="popup">
             <h3>${escapeHtml(title)}</h3>
             <p>${escapeHtml(address)}</p>
             ${buildBedsRent(apt.rent_by_bed)}
             <p><strong>Phone:</strong> ${escapeHtml(phone)}</p>
-            ${
-                link
-                ? `<p><a href="${link}" target="_blank">View on Apartments.com</a></p>`
-                : ""
-            }
-        </div>
-        `;
+            ${link ? `<p><a href="${link}" target="_blank">View on Apartments.com</a></p>` : ""}
+        </div>`;
+}
 
-        const popup = new mapboxgl.Popup({offset:25})
-            .setHTML(popupHTML);
+// ── Load apartments + set up clustering once the map style is ready ───────────
 
-        new mapboxgl.Marker({color:"blue"})
-            .setLngLat([apt.lon, apt.lat])
-            .setPopup(popup)   // click automatically opens
+map.on("load", () => {
+
+    fetch("/static/bs-results/apartments-test.json")
+        .then(res => res.json())
+        .then(apartments => {
+
+            // Convert apartments array → GeoJSON FeatureCollection.
+            // All popup data is stored as feature properties so we can
+            // retrieve it later when the user clicks an unclustered point.
+            const geojson = {
+                type: "FeatureCollection",
+                features: apartments
+                    .filter(apt => apt.lat && apt.lon)
+                    .map(apt => ({
+                        type: "Feature",
+                        geometry: {
+                            type: "Point",
+                            coordinates: [apt.lon, apt.lat]
+                        },
+                        properties: {
+                            // Store the full popup HTML as a single property
+                            // so we don't have to rebuild it on click.
+                            popupHTML:    buildPopupHTML(apt),
+                            title:        apt.title || apt.address || "Apartment",
+                        }
+                    }))
+            };
+
+            // ── Source ────────────────────────────────────────────────────
+            map.addSource("apartments", {
+                type: "geojson",
+                data: geojson,
+                cluster: true,          // enable clustering
+                clusterMaxZoom: 14,     // stop clustering above zoom 14
+                clusterRadius: 50       // px radius for grouping points
+            });
+
+            // ── Layer 1: cluster bubbles ──────────────────────────────────
+            // Color and size scale with the number of points in each cluster.
+            map.addLayer({
+                id: "clusters",
+                type: "circle",
+                source: "apartments",
+                filter: ["has", "point_count"],
+                paint: {
+                    "circle-color": [
+                        "step", ["get", "point_count"],
+                        "#4A90D9",   //  < 10  — light blue
+                        10,  "#2563EB",   // 10–29 — medium blue
+                        30,  "#1E3A8A"    // 30 +  — dark blue
+                    ],
+                    "circle-radius": [
+                        "step", ["get", "point_count"],
+                        20,   // < 10
+                        10, 28,   // 10–29
+                        30, 36    // 30+
+                    ],
+                    "circle-opacity": 0.85,
+                    "circle-stroke-width": 2,
+                    "circle-stroke-color": "#fff"
+                }
+            });
+
+            // ── Layer 2: count label on each cluster ──────────────────────
+            map.addLayer({
+                id: "cluster-count",
+                type: "symbol",
+                source: "apartments",
+                filter: ["has", "point_count"],
+                layout: {
+                    "text-field": "{point_count_abbreviated}",
+                    "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Bold"],
+                    "text-size": 14
+                },
+                paint: {
+                    "text-color": "#ffffff"
+                }
+            });
+
+            // ── Layer 3: individual apartment dots (unclustered) ──────────
+            map.addLayer({
+                id: "unclustered-point",
+                type: "circle",
+                source: "apartments",
+                filter: ["!", ["has", "point_count"]],
+                paint: {
+                    "circle-radius": 8,
+                    "circle-color": "#3B82F6",
+                    "circle-stroke-width": 2,
+                    "circle-stroke-color": "#fff"
+                }
+            });
+
+            // ── Interaction: zoom into cluster on click ───────────────────
+            map.on("click", "clusters", e => {
+                const features = map.queryRenderedFeatures(e.point, { layers: ["clusters"] });
+                const clusterId = features[0].properties.cluster_id;
+                map.getSource("apartments").getClusterExpansionZoom(clusterId, (err, zoom) => {
+                    if (err) return;
+                    map.easeTo({ center: features[0].geometry.coordinates, zoom });
+                });
+            });
+
+            // ── Interaction: popup on individual apartment click ──────────
+            map.on("click", "unclustered-point", e => {
+                const coords = e.features[0].geometry.coordinates.slice();
+                const { popupHTML } = e.features[0].properties;
+
+                // Adjust for world-wrap copies
+                while (Math.abs(e.lngLat.lng - coords[0]) > 180)
+                    coords[0] += e.lngLat.lng > coords[0] ? 360 : -360;
+
+                new mapboxgl.Popup({ offset: 12 })
+                    .setLngLat(coords)
+                    .setHTML(popupHTML)
+                    .addTo(map);
+            });
+
+            // ── Cursor helpers ────────────────────────────────────────────
+            map.on("mouseenter", "clusters",          () => map.getCanvas().style.cursor = "pointer");
+            map.on("mouseleave", "clusters",          () => map.getCanvas().style.cursor = "");
+            map.on("mouseenter", "unclustered-point", () => map.getCanvas().style.cursor = "pointer");
+            map.on("mouseleave", "unclustered-point", () => map.getCanvas().style.cursor = "");
+        });
+
+    // ── Red event markers (unchanged, no clustering needed) ──────────────────
+    [
+        { lngLat: [-93.6350, 41.5850], title: "Music Festival",  body: "Live downtown event" },
+        { lngLat: [-93.6400, 41.6000], title: "Farmers Market",  body: "Weekend event" },
+    ].forEach(({ lngLat, title, body }) => {
+        new mapboxgl.Marker({ color: "red" })
+            .setLngLat(lngLat)
+            .setPopup(new mapboxgl.Popup().setHTML(`<h3>${title}</h3><p>${body}</p>`))
             .addTo(map);
-
     });
-
 });
-
-
-/* Example events */
-
-new mapboxgl.Marker({color:"red"})
-.setLngLat([-93.6350, 41.5850])
-.setPopup(new mapboxgl.Popup().setHTML(
-    "<h3>Music Festival</h3><p>Live downtown event</p>"
-))
-.addTo(map);
-
-
-new mapboxgl.Marker({color:"red"})
-.setLngLat([-93.6400, 41.6000])
-.setPopup(new mapboxgl.Popup().setHTML(
-    "<h3>Farmers Market</h3><p>Weekend event</p>"
-))
-.addTo(map);
-
 </script>
-
 </body>
 </html>
