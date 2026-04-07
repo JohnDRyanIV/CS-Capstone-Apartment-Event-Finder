@@ -2,36 +2,112 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Des Moines Apartment Map</title>
+    <title>Des Moines Map</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet">
     <style>
         body { margin: 0; font-family: Arial, sans-serif; }
         #map { width: 100%; height: 100vh; }
 
-        .legend {
+        .controls {
             position: absolute;
             top: 10px;
             left: 10px;
             background: white;
-            padding: 10px;
+            padding: 12px 16px;
             border-radius: 6px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
             font-size: 14px;
             z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
+        .controls strong {
+            margin-bottom: 2px;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .radio-group input[type="radio"] {
+            cursor: pointer;
+            accent-color: #3B82F6;
+        }
+
+        /* ── Popup base ───────────────────────────────────────────────── */
         .popup h3 { margin: 0 0 6px 0; }
         .popup p  { margin: 3px 0; }
         .popup ul { margin: 4px 0 6px 16px; }
+
+        /* ── Carousel controls ────────────────────────────────────────── */
+        .popup-carousel {
+            min-width: 240px;
+            max-width: 300px;
+        }
+
+        .carousel-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .carousel-nav button {
+            background: none;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 3px 10px;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            color: #374151;
+            transition: background 0.15s;
+        }
+
+        .carousel-nav button:hover:not(:disabled) {
+            background: #f3f4f6;
+        }
+
+        .carousel-nav button:disabled {
+            opacity: 0.3;
+            cursor: default;
+        }
+
+        .carousel-counter {
+            font-size: 12px;
+            color: #6b7280;
+        }
     </style>
 </head>
 <body>
 
-<div class="legend">
-    <strong>Legend</strong><br>
-    🔵 Apartment<br>
-    🔴 Event
+<div class="controls">
+    <strong>Show</strong>
+    <div class="radio-group">
+        <label>
+            <input type="radio" name="layer" value="apartments" checked>
+            🔵 Apartments
+        </label>
+        <label>
+            <input type="radio" name="layer" value="events">
+            🔴 Events
+        </label>
+    </div>
 </div>
 
 <div id="map"></div>
@@ -64,7 +140,7 @@ function buildBedsRent(rentData) {
     return html + "</ul>";
 }
 
-function buildPopupHTML(apt) {
+function buildAptPopupHTML(apt) {
     const title   = apt.title   || apt.address || "Apartment";
     const address = apt.address || "Unknown address";
     const phone   = apt.phone_number || "N/A";
@@ -75,146 +151,262 @@ function buildPopupHTML(apt) {
             <p>${escapeHtml(address)}</p>
             ${buildBedsRent(apt.rent_by_bed)}
             <p><strong>Phone:</strong> ${escapeHtml(phone)}</p>
-            ${link ? `<p><a href="${link}" target="_blank">View on Apartments.com</a></p>` : ""}
+            ${link ? `<p><a href="${escapeHtml(link)}" target="_blank">View on Apartments.com</a></p>` : ""}
         </div>`;
 }
 
-// ── Load apartments + set up clustering once the map style is ready ───────────
+function buildEventCardHTML(event) {
+    const title   = event.event_title || "Event";
+    const address = event.address     || "";
+    const date    = event.event_date  || "";
+    const desc    = event.description || "";
+    const link    = event.event_detail_url || null;
+    return `
+        <h3>${escapeHtml(title)}</h3>
+        ${date    ? `<p><strong>${escapeHtml(date)}</strong></p>` : ""}
+        ${address ? `<p>${escapeHtml(address)}</p>` : ""}
+        ${desc    ? `<p>${escapeHtml(desc.length > 120 ? desc.slice(0, 120) + "…" : desc)}</p>` : ""}
+        ${link    ? `<p><a href="${escapeHtml(link)}" target="_blank">View on Catch Des Moines</a></p>` : ""}`;
+}
+
+// ── Event carousel popup ──────────────────────────────────────────────────────
+
+function buildEventCarouselNode(events) {
+    let index = 0;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "popup popup-carousel";
+
+    const content = document.createElement("div");
+    content.className = "carousel-content";
+    wrapper.appendChild(content);
+
+    let prevBtn, nextBtn, counter;
+    if (events.length > 1) {
+        const nav = document.createElement("div");
+        nav.className = "carousel-nav";
+
+        prevBtn = document.createElement("button");
+        prevBtn.textContent = "←";
+        prevBtn.title = "Previous event";
+
+        counter = document.createElement("span");
+        counter.className = "carousel-counter";
+
+        nextBtn = document.createElement("button");
+        nextBtn.textContent = "→";
+        nextBtn.title = "Next event";
+
+        nav.appendChild(prevBtn);
+        nav.appendChild(counter);
+        nav.appendChild(nextBtn);
+        wrapper.appendChild(nav);
+
+        prevBtn.addEventListener("click", () => {
+            if (index > 0) { index--; render(); }
+        });
+        nextBtn.addEventListener("click", () => {
+            if (index < events.length - 1) { index++; render(); }
+        });
+    }
+
+    function render() {
+        content.innerHTML = buildEventCardHTML(events[index]);
+        if (events.length > 1) {
+            counter.textContent = `${index + 1} / ${events.length}`;
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === events.length - 1;
+        }
+    }
+
+    render();
+    return wrapper;
+}
+
+// ── Group events by coordinate key ───────────────────────────────────────────
+
+function groupByCoord(events) {
+    const groups = {};
+    events.forEach(ev => {
+        const key = `${ev.longitude},${ev.latitude}`;
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(ev);
+    });
+    return groups;
+}
+
+// ── Visibility helpers ────────────────────────────────────────────────────────
+
+function setLayerGroupVisibility(prefix, visible) {
+    const v = visible ? "visible" : "none";
+    [`${prefix}-clusters`, `${prefix}-cluster-count`, `${prefix}-unclustered-point`]
+        .forEach(id => {
+            if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", v);
+        });
+}
+
+// ── Build a clustered source + 3 layers ──────────────────────────────────────
+
+function addClusteredLayer(prefix, geojson, color, darkColor, veryDarkColor) {
+    map.addSource(prefix, {
+        type: "geojson",
+        data: geojson,
+        cluster: true,
+        clusterMaxZoom: 14,
+        clusterRadius: 50
+    });
+
+    map.addLayer({
+        id: `${prefix}-clusters`,
+        type: "circle",
+        source: prefix,
+        filter: ["has", "point_count"],
+        paint: {
+            "circle-color": [
+                "step", ["get", "point_count"],
+                color, 10, darkColor, 30, veryDarkColor
+            ],
+            "circle-radius": [
+                "step", ["get", "point_count"],
+                20, 10, 28, 30, 36
+            ],
+            "circle-opacity": 0.85,
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "#fff"
+        }
+    });
+
+    map.addLayer({
+        id: `${prefix}-cluster-count`,
+        type: "symbol",
+        source: prefix,
+        filter: ["has", "point_count"],
+        layout: {
+            "text-field": "{point_count_abbreviated}",
+            "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Bold"],
+            "text-size": 14
+        },
+        paint: { "text-color": "#ffffff" }
+    });
+
+    map.addLayer({
+        id: `${prefix}-unclustered-point`,
+        type: "circle",
+        source: prefix,
+        filter: ["!", ["has", "point_count"]],
+        paint: {
+            "circle-radius": 8,
+            "circle-color": color,
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "#fff"
+        }
+    });
+
+    map.on("click", `${prefix}-clusters`, e => {
+        const features = map.queryRenderedFeatures(e.point, { layers: [`${prefix}-clusters`] });
+        const clusterId = features[0].properties.cluster_id;
+        map.getSource(prefix).getClusterExpansionZoom(clusterId, (err, zoom) => {
+            if (err) return;
+            map.easeTo({ center: features[0].geometry.coordinates, zoom });
+        });
+    });
+
+    map.on("mouseenter", `${prefix}-clusters`,          () => map.getCanvas().style.cursor = "pointer");
+    map.on("mouseleave", `${prefix}-clusters`,          () => map.getCanvas().style.cursor = "");
+    map.on("mouseenter", `${prefix}-unclustered-point`, () => map.getCanvas().style.cursor = "pointer");
+    map.on("mouseleave", `${prefix}-unclustered-point`, () => map.getCanvas().style.cursor = "");
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
+
+let eventGroups = {};
 
 map.on("load", () => {
 
-    fetch("/static/bs-results/apartments-test.json")
-        .then(res => res.json())
-        .then(apartments => {
+    Promise.all([
+        fetch("/static/bs-results/apartments-test.json").then(r => r.json()),
+        fetch("/static/bs-results/catchdesmoines-events.json").then(r => r.json())
+    ]).then(([apartments, events]) => {
 
-            // Convert apartments array → GeoJSON FeatureCollection.
-            // All popup data is stored as feature properties so we can
-            // retrieve it later when the user clicks an unclustered point.
-            const geojson = {
-                type: "FeatureCollection",
-                features: apartments
-                    .filter(apt => apt.lat && apt.lon)
-                    .map(apt => ({
-                        type: "Feature",
-                        geometry: {
-                            type: "Point",
-                            coordinates: [apt.lon, apt.lat]
-                        },
-                        properties: {
-                            // Store the full popup HTML as a single property
-                            // so we don't have to rebuild it on click.
-                            popupHTML:    buildPopupHTML(apt),
-                            title:        apt.title || apt.address || "Apartment",
-                        }
-                    }))
-            };
+        // ── Apartments (blue) ─────────────────────────────────────────────
+        const aptGeoJSON = {
+            type: "FeatureCollection",
+            features: apartments
+                .filter(apt => apt.lat && apt.lon)
+                .map(apt => ({
+                    type: "Feature",
+                    geometry: { type: "Point", coordinates: [apt.lon, apt.lat] },
+                    properties: {
+                        popupHTML: buildAptPopupHTML(apt),
+                        title: apt.title || apt.address || "Apartment"
+                    }
+                }))
+        };
 
-            // ── Source ────────────────────────────────────────────────────
-            map.addSource("apartments", {
-                type: "geojson",
-                data: geojson,
-                cluster: true,          // enable clustering
-                clusterMaxZoom: 14,     // stop clustering above zoom 14
-                clusterRadius: 50       // px radius for grouping points
-            });
+        addClusteredLayer("apartments", aptGeoJSON, "#3B82F6", "#2563EB", "#1E3A8A");
 
-            // ── Layer 1: cluster bubbles ──────────────────────────────────
-            // Color and size scale with the number of points in each cluster.
-            map.addLayer({
-                id: "clusters",
-                type: "circle",
-                source: "apartments",
-                filter: ["has", "point_count"],
-                paint: {
-                    "circle-color": [
-                        "step", ["get", "point_count"],
-                        "#4A90D9",   //  < 10  — light blue
-                        10,  "#2563EB",   // 10–29 — medium blue
-                        30,  "#1E3A8A"    // 30 +  — dark blue
-                    ],
-                    "circle-radius": [
-                        "step", ["get", "point_count"],
-                        20,   // < 10
-                        10, 28,   // 10–29
-                        30, 36    // 30+
-                    ],
-                    "circle-opacity": 0.85,
-                    "circle-stroke-width": 2,
-                    "circle-stroke-color": "#fff"
-                }
-            });
-
-            // ── Layer 2: count label on each cluster ──────────────────────
-            map.addLayer({
-                id: "cluster-count",
-                type: "symbol",
-                source: "apartments",
-                filter: ["has", "point_count"],
-                layout: {
-                    "text-field": "{point_count_abbreviated}",
-                    "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Bold"],
-                    "text-size": 14
-                },
-                paint: {
-                    "text-color": "#ffffff"
-                }
-            });
-
-            // ── Layer 3: individual apartment dots (unclustered) ──────────
-            map.addLayer({
-                id: "unclustered-point",
-                type: "circle",
-                source: "apartments",
-                filter: ["!", ["has", "point_count"]],
-                paint: {
-                    "circle-radius": 8,
-                    "circle-color": "#3B82F6",
-                    "circle-stroke-width": 2,
-                    "circle-stroke-color": "#fff"
-                }
-            });
-
-            // ── Interaction: zoom into cluster on click ───────────────────
-            map.on("click", "clusters", e => {
-                const features = map.queryRenderedFeatures(e.point, { layers: ["clusters"] });
-                const clusterId = features[0].properties.cluster_id;
-                map.getSource("apartments").getClusterExpansionZoom(clusterId, (err, zoom) => {
-                    if (err) return;
-                    map.easeTo({ center: features[0].geometry.coordinates, zoom });
-                });
-            });
-
-            // ── Interaction: popup on individual apartment click ──────────
-            map.on("click", "unclustered-point", e => {
-                const coords = e.features[0].geometry.coordinates.slice();
-                const { popupHTML } = e.features[0].properties;
-
-                // Adjust for world-wrap copies
-                while (Math.abs(e.lngLat.lng - coords[0]) > 180)
-                    coords[0] += e.lngLat.lng > coords[0] ? 360 : -360;
-
-                new mapboxgl.Popup({ offset: 12 })
-                    .setLngLat(coords)
-                    .setHTML(popupHTML)
-                    .addTo(map);
-            });
-
-            // ── Cursor helpers ────────────────────────────────────────────
-            map.on("mouseenter", "clusters",          () => map.getCanvas().style.cursor = "pointer");
-            map.on("mouseleave", "clusters",          () => map.getCanvas().style.cursor = "");
-            map.on("mouseenter", "unclustered-point", () => map.getCanvas().style.cursor = "pointer");
-            map.on("mouseleave", "unclustered-point", () => map.getCanvas().style.cursor = "");
+        map.on("click", "apartments-unclustered-point", e => {
+            const coords = e.features[0].geometry.coordinates.slice();
+            const { popupHTML } = e.features[0].properties;
+            while (Math.abs(e.lngLat.lng - coords[0]) > 180)
+                coords[0] += e.lngLat.lng > coords[0] ? 360 : -360;
+            new mapboxgl.Popup({ offset: 12 })
+                .setLngLat(coords)
+                .setHTML(popupHTML)
+                .addTo(map);
         });
 
-    // ── Red event markers (unchanged, no clustering needed) ──────────────────
-    [
-        { lngLat: [-93.6350, 41.5850], title: "Music Festival",  body: "Live downtown event" },
-        { lngLat: [-93.6400, 41.6000], title: "Farmers Market",  body: "Weekend event" },
-    ].forEach(({ lngLat, title, body }) => {
-        new mapboxgl.Marker({ color: "red" })
-            .setLngLat(lngLat)
-            .setPopup(new mapboxgl.Popup().setHTML(`<h3>${title}</h3><p>${body}</p>`))
-            .addTo(map);
+        // ── Events (red) ──────────────────────────────────────────────────
+        const validEvents = events.filter(ev => ev.latitude != null && ev.longitude != null);
+
+        eventGroups = groupByCoord(validEvents);
+
+        // One GeoJSON point per unique coordinate
+        const eventGeoJSON = {
+            type: "FeatureCollection",
+            features: Object.entries(eventGroups).map(([key, evs]) => {
+                const [lng, lat] = key.split(",").map(Number);
+                return {
+                    type: "Feature",
+                    geometry: { type: "Point", coordinates: [lng, lat] },
+                    properties: {
+                        coordKey: key,
+                        count: evs.length,
+                        title: evs[0].event_title || "Event"
+                    }
+                };
+            })
+        };
+
+        addClusteredLayer("events", eventGeoJSON, "#EF4444", "#DC2626", "#991B1B");
+
+        setLayerGroupVisibility("events", false);
+
+        // Event popup with carousel
+        map.on("click", "events-unclustered-point", e => {
+            const coords = e.features[0].geometry.coordinates.slice();
+            const { coordKey } = e.features[0].properties;
+
+            while (Math.abs(e.lngLat.lng - coords[0]) > 180)
+                coords[0] += e.lngLat.lng > coords[0] ? 360 : -360;
+
+            const eventsAtLocation = eventGroups[coordKey] || [];
+            const carouselNode = buildEventCarouselNode(eventsAtLocation);
+
+            new mapboxgl.Popup({ offset: 12 })
+                .setLngLat(coords)
+                .setDOMContent(carouselNode)
+                .addTo(map);
+        });
+
+        // ── Radio toggle ──────────────────────────────────────────────────
+        document.querySelectorAll('input[name="layer"]').forEach(radio => {
+            radio.addEventListener("change", e => {
+                const showApts = e.target.value === "apartments";
+                setLayerGroupVisibility("apartments", showApts);
+                setLayerGroupVisibility("events",    !showApts);
+            });
+        });
     });
 });
 </script>

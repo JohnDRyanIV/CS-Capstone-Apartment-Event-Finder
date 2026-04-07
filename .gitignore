@@ -41,6 +41,4 @@ bs-test/
 
 # Other
 /scrapers
-scraper.py
-scraper2.py
-geocoder.py
+/geolocation
