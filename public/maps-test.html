@@ -162,6 +162,57 @@ function buildBedsRent(rentData) {
     return html + "</ul>";
 }
 
+function extractPriceNumber(priceText) {
+    if (!priceText) return null;
+
+    const matches = String(priceText).match(/\d[\d,]*/g);
+    if (!matches || matches.length === 0) return null;
+
+    const values = matches
+        .map(value => Number(value.replace(/,/g, "")))
+        .filter(value => !Number.isNaN(value));
+
+    if (values.length === 0) return null;
+
+    return Math.min(...values);
+}
+
+function getApartmentMinPrice(apt) {
+    if (!apt.rent_by_bed) return null;
+
+    const prices = Object.values(apt.rent_by_bed)
+        .map(extractPriceNumber)
+        .filter(value => value !== null);
+
+    if (prices.length === 0) return null;
+
+    return Math.min(...prices);
+}
+
+function buildApartmentGeoJSON(apartments, maxPrice) {
+    return {
+        type: "FeatureCollection",
+        features: apartments
+            .filter(apt => apt.lat && apt.lon)
+            .filter(apt => {
+                const minPrice = getApartmentMinPrice(apt);
+
+                // Keep listings with no parsed price so they still show up
+                if (minPrice === null) return true;
+
+                return minPrice <= maxPrice;
+            })
+            .map(apt => ({
+                type: "Feature",
+                geometry: { type: "Point", coordinates: [apt.lon, apt.lat] },
+                properties: {
+                    popupHTML: buildAptPopupHTML(apt),
+                    title: apt.title || apt.address || "Apartment"
+                }
+            }))
+    };
+}
+
 function buildAptPopupHTML(apt) {
     const title   = apt.title   || apt.address || "Apartment";
     const address = apt.address || "Unknown address";
@@ -351,21 +402,21 @@ map.on("load", () => {
     ]).then(([apartments, events]) => {
 
         // ── Apartments (blue) ─────────────────────────────────────────────
-        const aptGeoJSON = {
-            type: "FeatureCollection",
-            features: apartments
-                .filter(apt => apt.lat && apt.lon)
-                .map(apt => ({
-                    type: "Feature",
-                    geometry: { type: "Point", coordinates: [apt.lon, apt.lat] },
-                    properties: {
-                        popupHTML: buildAptPopupHTML(apt),
-                        title: apt.title || apt.address || "Apartment"
-                    }
-                }))
-        };
+        const priceRange = document.getElementById("priceRange");
+        const priceValue = document.getElementById("priceValue");
+        const apartmentFilters = document.getElementById("apartment-filters");
 
-        addClusteredLayer("apartments", aptGeoJSON, "#3B82F6", "#2563EB", "#1E3A8A");
+        function updateApartmentLayer() {
+            const maxPrice = Number(priceRange.value);
+            priceValue.textContent = `$${maxPrice}`;
+
+            const aptGeoJSON = buildApartmentGeoJSON(apartments, maxPrice);
+            map.getSource("apartments").setData(aptGeoJSON);
+        }
+
+        const initialAptGeoJSON = buildApartmentGeoJSON(apartments, Number(priceRange.value));
+
+        addClusteredLayer("apartments", initialAptGeoJSON, "#3B82F6", "#2563EB", "#1E3A8A");
 
         map.on("click", "apartments-unclustered-point", e => {
             const coords = e.features[0].geometry.coordinates.slice();
@@ -376,6 +427,10 @@ map.on("load", () => {
                 .setLngLat(coords)
                 .setHTML(popupHTML)
                 .addTo(map);
+        });
+
+        priceRange.addEventListener("input", () => {
+            updateApartmentLayer();
         });
 
         // ── Events (red) ──────────────────────────────────────────────────
@@ -427,8 +482,10 @@ map.on("load", () => {
                 const showApts = e.target.value === "apartments";
                 setLayerGroupVisibility("apartments", showApts);
                 setLayerGroupVisibility("events",    !showApts);
+                apartmentFilters.style.display = showApts ? "flex" : "none";
             });
         });
+        apartmentFilters.style.display = showApts ? "flex" : "none";
     });
 });
 </script>
