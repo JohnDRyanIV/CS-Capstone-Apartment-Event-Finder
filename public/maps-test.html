@@ -407,6 +407,10 @@ map.on("load", () => {
                 .addTo(map);
         });
 
+        priceRange.addEventListener("input", () => {
+            updateApartmentLayer();
+        });
+
         // ── Events (red) ──────────────────────────────────────────────────
         const validEvents = events.filter(ev => ev.latitude != null && ev.longitude != null);
 
@@ -456,8 +460,10 @@ map.on("load", () => {
                 const showApts = e.target.value === "apartments";
                 setLayerGroupVisibility("apartments", showApts);
                 setLayerGroupVisibility("events",    !showApts);
+                apartmentFilters.style.display = showApts ? "flex" : "none";
             });
         });
+        apartmentFilters.style.display = showApts ? "flex" : "none";
     });
 });
 </script>
