@@ -193,8 +193,8 @@
         <label for="eventEndDate">End Date</label>
         <input type="date" id="eventEndDate">
 
-        <strong>Tags</strong>
-        <div id="eventTagFilters" class="checkbox-group"></div>
+        <strong>Categories</strong>
+        <div id="eventCategoryFilters" class="checkbox-group"></div>
     </div>
 </div>
 
@@ -298,15 +298,15 @@ function eventMatchesDateRange(event, startDate, endDate) {
     return true;
 }
 
-function eventMatchesTags(event, selectedTags) {
-    if (selectedTags.length === 0) return true;
+function eventMatchesCategories(event, selectedCategories) {
+    if (selectedCategories.length === 0) return true;
 
-    const eventTags = Array.isArray(event.tags) ? event.tags : [];
-    return selectedTags.some(tag => eventTags.includes(tag));
+    const eventCategories = Array.isArray(event.categories) ? event.categories : [];
+    return selectedCategories.some(category => eventCategories.includes(category));
 }
 
-function buildEventGeoJSON(events, startDate, endDate, selectedTags) {
-    const grouped = groupByCoord(filteredEvents);
+function buildEventGeoJSON(events, startDate, endDate, selectedCategories) {
+    const grouped = groupByCoord(events);
 
     return {
         type: "FeatureCollection",
@@ -325,38 +325,38 @@ function buildEventGeoJSON(events, startDate, endDate, selectedTags) {
     };
 }
 
-function collectEventTags(events) {
-    const tagSet = new Set();
+function collectEventCategories(events) {
+    const categorySet = new Set();
 
     events.forEach(event => {
-        if (Array.isArray(event.tags)) {
-            event.tags.forEach(tag => {
-                if (tag) tagSet.add(tag);
+        if (Array.isArray(event.categories)) {
+            event.categories.forEach(category => {
+                if (category) categorySet.add(category);
             });
         }
     });
 
-    return Array.from(tagSet).sort((a, b) => a.localeCompare(b));
+    return Array.from(categorySet).sort((a, b) => a.localeCompare(b));
 }
 
-function getSelectedEventTags() {
-    return Array.from(document.querySelectorAll("#eventTagFilters input:checked"))
+function getSelectedEventCategories() {
+    return Array.from(document.querySelectorAll("#eventCategoryFilters input:checked"))
         .map(input => input.value);
 }
 
-function buildEventTagFilters(tags) {
-    const container = document.getElementById("eventTagFilters");
+function buildEventCategoryFilters(categories) {
+    const container = document.getElementById("eventCategoryFilters");
     container.innerHTML = "";
 
-    tags.forEach(tag => {
+    categories.forEach(category => {
         const label = document.createElement("label");
 
         const input = document.createElement("input");
         input.type = "checkbox";
-        input.value = tag;
+        input.value = category;
 
         label.appendChild(input);
-        label.appendChild(document.createTextNode(tag));
+        label.appendChild(document.createTextNode(category));
         container.appendChild(label);
     });
 }
@@ -586,10 +586,13 @@ map.on("load", () => {
             updateApartmentLayer(priceRange.value);
         });
 
-        priceValue.addEventListener("input", () => {
+        priceValue.addEventListener("change", () => {
             let typedValue = Number(priceValue.value);
 
-            if (Number.isNaN(typedValue)) return;
+            if (Number.isNaN(typedValue)) {
+                priceValue.value = priceRange.value;
+                return;
+            }
 
             if (typedValue < Number(priceRange.min)) {
                 typedValue = Number(priceRange.min);
@@ -601,6 +604,22 @@ map.on("load", () => {
 
             updateApartmentLayer(typedValue);
         });
+        
+        priceValue.addEventListener("blur", () => {
+            let typedValue = Number(priceValue.value);
+            if (Number.isNaN(typedValue)) {
+                priceValue.value = priceRange.value;
+                return;
+            }
+                if (typedValue < Number(priceRange.min)) {
+                    typedValue = Number(priceRange.min);
+                }
+
+                if (typedValue > Number(priceRange.max)) {
+                    typedValue = Number(priceRange.max);
+                }
+                updateApartmentLayer(typedValue);
+        });
 
         eventStartDate.addEventListener("change", () => {
             updateEventLayer();
@@ -610,23 +629,23 @@ map.on("load", () => {
             updateEventLayer();
         });
 
-        document.getElementById("eventTagFilters").addEventListener("change", () => {
+        document.getElementById("eventCategoryFilters").addEventListener("change", () => {
             updateEventLayer();
         });
 
         // ── Events (red) ──────────────────────────────────────────────────
-        const allEventTags = collectEventTags(events);
-        buildEventTagFilters(allEventTags);
+        const allEventCategories = collectEventCategories(events);
+        buildEventCategoryFilters(allEventCategories);
 
         function updateEventLayer() {
             const startDate = eventStartDate.value || null;
             const endDate = eventEndDate.value || null;
-            const selectedTags = getSelectedEventTags();
+            const selectedCategories = getSelectedEventCategories();
 
             const filteredEvents = events.filter(ev => {
                 if (ev.latitude == null || ev.longitude == null) return false;
                 if (!eventMatchesDateRange(ev, startDate, endDate)) return false;
-                if (!eventMatchesTags(ev, selectedTags)) return false;
+                if (!eventMatchesCategories(ev, selectedCategories)) return false;
                 return true;
             });
 
@@ -663,17 +682,20 @@ map.on("load", () => {
         });
 
         // ── Radio toggle ──────────────────────────────────────────────────
+        function updateVisibleLayer(selectedLayer) {
+            const showApts = selectedLayer === "apartments";
+            setLayerGroupVisibility("apartments", showApts);
+            setLayerGroupVisibility("events",    !showApts);
+            apartmentFilters.style.display = showApts ? "flex" : "none";
+            eventFilters.style.display = showApts ? "none" : "flex";
+        }
         document.querySelectorAll('input[name="layer"]').forEach(radio => {
             radio.addEventListener("change", e => {
-                const showApts = e.target.value === "apartments";
-                setLayerGroupVisibility("apartments", showApts);
-                setLayerGroupVisibility("events",    !showApts);
-                apartmentFilters.style.display = showApts ? "flex" : "none";
-                eventFilters.style.display = showApts ? "none" : "flex";
+                updateVisibleLayer(e.target.value);
             });
         });
-        apartmentFilters.style.display = "flex";
-        eventFilters.style.display = "none";
+        const selectedLayer = document.querySelector('input[name="layer"]:checked')?.value || "apartments";
+        updateVisibleLayer(selectedLayer);
     });
 });
 </script>
