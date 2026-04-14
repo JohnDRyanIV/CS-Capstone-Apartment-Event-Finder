@@ -47,6 +47,57 @@
             accent-color: #3B82F6;
         }
 
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding-top: 8px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .filter-group label {
+            font-size: 13px;
+            color: #374151;
+        }
+
+        .price-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .price-row input[type="range"] {
+            width: 170px;
+        }
+
+        .price-row input[type="number"] {
+            width: 80px;
+            padding: 4px 6px;
+            font-size: 13px;
+        }
+
+        .filter-group input[type="date"] {
+            padding: 4px 6px;
+            font-size: 13px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-height: 160px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
         /* ── Popup base ───────────────────────────────────────────────── */
         .popup h3 { margin: 0 0 6px 0; }
         .popup p  { margin: 3px 0; }
@@ -107,6 +158,28 @@
             <input type="radio" name="layer" value="events">
             🔴 Events
         </label>
+    </div>
+    <div id="apartment-filters" class="filter-group">
+        <strong>Apartment Filters</strong>
+
+        <label for="priceRange">Max Rent</label>
+        <div class="price-row">
+            <input type="range" id="priceRange" min="500" max="4000" step="50" value="4000">
+            <input type="number" id="priceValue" min="500" max="4000" step="50" value="4000">
+        </div>
+    </div>
+
+    <div id="event-filters" class="filter-group" style="display: none;">
+        <strong>Event Filters</strong>
+
+        <label for="eventStartDate">Start Date</label>
+        <input type="date" id="eventStartDate">
+
+        <label for="eventEndDate">End Date</label>
+        <input type="date" id="eventEndDate">
+
+        <strong>Tags</strong>
+        <div id="eventTagFilters" class="checkbox-group"></div>
     </div>
 </div>
 
@@ -189,6 +262,88 @@ function buildApartmentGeoJSON(apartments, maxPrice) {
                 }
             }))
     };
+}
+
+function normalizeDateString(value) {
+    if (!value) return null;
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return null;
+
+    return parsed.toISOString().split("T")[0];
+}
+
+function eventMatchesDateRange(event, startDate, endDate) {
+    const eventDate = normalizeDateString(event.event_date);
+    if (!eventDate) return true;
+
+    if (startDate && eventDate < startDate) return false;
+    if (endDate && eventDate > endDate) return false;
+
+    return true;
+}
+
+function eventMatchesTags(event, selectedTags) {
+    if (selectedTags.length === 0) return true;
+
+    const eventTags = Array.isArray(event.tags) ? event.tags : [];
+    return selectedTags.some(tag => eventTags.includes(tag));
+}
+
+function buildEventGeoJSON(events, startDate, endDate, selectedTags) {
+    const grouped = groupByCoord(filteredEvents);
+
+    return {
+        type: "FeatureCollection",
+        features: Object.entries(grouped).map(([key, evs]) => {
+            const [lng, lat] = key.split(",").map(Number);
+            return {
+                type: "Feature",
+                geometry: { type: "Point", coordinates: [lng, lat] },
+                properties: {
+                    coordKey: key,
+                    count: evs.length,
+                    title: evs[0].event_title || "Event"
+                }
+            };
+        })
+    };
+}
+
+function collectEventTags(events) {
+    const tagSet = new Set();
+
+    events.forEach(event => {
+        if (Array.isArray(event.tags)) {
+            event.tags.forEach(tag => {
+                if (tag) tagSet.add(tag);
+            });
+        }
+    });
+
+    return Array.from(tagSet).sort((a, b) => a.localeCompare(b));
+}
+
+function getSelectedEventTags() {
+    return Array.from(document.querySelectorAll("#eventTagFilters input:checked"))
+        .map(input => input.value);
+}
+
+function buildEventTagFilters(tags) {
+    const container = document.getElementById("eventTagFilters");
+    container.innerHTML = "";
+
+    tags.forEach(tag => {
+        const label = document.createElement("label");
+
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.value = tag;
+
+        label.appendChild(input);
+        label.appendChild(document.createTextNode(tag));
+        container.appendChild(label);
+    });
 }
 
 function buildAptPopupHTML(apt) {
@@ -383,16 +538,21 @@ map.on("load", () => {
         const priceRange = document.getElementById("priceRange");
         const priceValue = document.getElementById("priceValue");
         const apartmentFilters = document.getElementById("apartment-filters");
+        const eventFilters = document.getElementById("event-filters");
+        const eventStartDate = document.getElementById("eventStartDate");
+        const eventEndDate = document.getElementById("eventEndDate");
 
-        function updateApartmentLayer() {
-            const maxPrice = Number(priceRange.value);
-            priceValue.textContent = `$${maxPrice}`;
+        function updateApartmentLayer(maxPrice) {
+            const priceNumber = Number(maxPrice);
+            priceRange.value = priceNumber;
+            priceValue.value = priceNumber;
 
-            const aptGeoJSON = buildApartmentGeoJSON(apartments, maxPrice);
+            const aptGeoJSON = buildApartmentGeoJSON(apartments, priceNumber);
             map.getSource("apartments").setData(aptGeoJSON);
         }
 
         const initialAptGeoJSON = buildApartmentGeoJSON(apartments, Number(priceRange.value));
+        priceValue.value = priceRange.value;
 
         addClusteredLayer("apartments", initialAptGeoJSON, "#3B82F6", "#2563EB", "#1E3A8A");
 
@@ -408,32 +568,65 @@ map.on("load", () => {
         });
 
         priceRange.addEventListener("input", () => {
-            updateApartmentLayer();
+            updateApartmentLayer(priceRange.value);
+        });
+
+        priceValue.addEventListener("input", () => {
+            let typedValue = Number(priceValue.value);
+
+            if (Number.isNaN(typedValue)) return;
+
+            if (typedValue < Number(priceRange.min)) {
+                typedValue = Number(priceRange.min);
+            }
+
+            if (typedValue > Number(priceRange.max)) {
+                typedValue = Number(priceRange.max);
+            }
+
+            updateApartmentLayer(typedValue);
+        });
+
+        eventStartDate.addEventListener("change", () => {
+            updateEventLayer();
+        });
+
+        eventEndDate.addEventListener("change", () => {
+            updateEventLayer();
+        });
+
+        document.getElementById("eventTagFilters").addEventListener("change", () => {
+            updateEventLayer();
         });
 
         // ── Events (red) ──────────────────────────────────────────────────
-        const validEvents = events.filter(ev => ev.latitude != null && ev.longitude != null);
+        const allEventTags = collectEventTags(events);
+        buildEventTagFilters(allEventTags);
 
-        eventGroups = groupByCoord(validEvents);
+        function updateEventLayer() {
+            const startDate = eventStartDate.value || null;
+            const endDate = eventEndDate.value || null;
+            const selectedTags = getSelectedEventTags();
+
+            const filteredEvents = events.filter(ev => {
+                if (ev.latitude == null || ev.longitude == null) return false;
+                if (!eventMatchesDateRange(ev, startDate, endDate)) return false;
+                if (!eventMatchesTags(ev, selectedTags)) return false;
+                return true;
+            });
+
+        eventGroups = groupByCoord(filteredEvents);
 
         // One GeoJSON point per unique coordinate
-        const eventGeoJSON = {
-            type: "FeatureCollection",
-            features: Object.entries(eventGroups).map(([key, evs]) => {
-                const [lng, lat] = key.split(",").map(Number);
-                return {
-                    type: "Feature",
-                    geometry: { type: "Point", coordinates: [lng, lat] },
-                    properties: {
-                        coordKey: key,
-                        count: evs.length,
-                        title: evs[0].event_title || "Event"
-                    }
-                };
-            })
-        };
+        const eventGeoJSON = buildEventGeoJSON(filteredEvents);
+        map.getSource("events").setData(eventGeoJSON);
+    }
 
-        addClusteredLayer("events", eventGeoJSON, "#EF4444", "#DC2626", "#991B1B");
+        const initialFilteredEvents = events.filter(ev => ev.latitude != null && ev.longitude != null);
+        const initialEventGeoJSON = buildEventGeoJSON(initialFilteredEvents);
+        eventGroups = groupByCoord(initialFilteredEvents);
+
+        addClusteredLayer("events", initialEventGeoJSON, "#EF4444", "#DC2626", "#991B1B");
 
         setLayerGroupVisibility("events", false);
 
@@ -461,9 +654,11 @@ map.on("load", () => {
                 setLayerGroupVisibility("apartments", showApts);
                 setLayerGroupVisibility("events",    !showApts);
                 apartmentFilters.style.display = showApts ? "flex" : "none";
+                eventFilters.style.display = showApts ? "none" : "flex";
             });
         });
-        apartmentFilters.style.display = showApts ? "flex" : "none";
+        apartmentFilters.style.display = "flex";
+        eventFilters.style.display = "none";
     });
 });
 </script>
