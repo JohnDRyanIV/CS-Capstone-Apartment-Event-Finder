@@ -5,9 +5,158 @@
     <title>Des Moines Map</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; font-family: Arial, sans-serif; }
-        #map { width: 100%; height: 100vh; }
+        body { margin: 0; font-family: Arial, sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        #map { flex: 1; height: 100vh; min-width: 0; }
+
+        /* ── Sidebar ──────────────────────────────────────────────────── */
+        #sidebar {
+            width: 340px;
+            flex-shrink: 0;
+            height: 100vh;
+            background: #f7f6f3;
+            border-left: 1px solid #e0ddd8;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #sidebar-header {
+            padding: 16px 20px 12px;
+            border-bottom: 1px solid #e0ddd8;
+            background: #f7f6f3;
+            flex-shrink: 0;
+        }
+
+        #sidebar-header h2 {
+            margin: 0 0 2px 0;
+            font-family: 'Lora', Georgia, serif;
+            font-size: 17px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        #sidebar-count {
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 12.5px;
+            color: #888;
+        }
+
+        #sidebar-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Each card in the sidebar */
+        .sidebar-card {
+            background: #ffffff;
+            border: 1px solid #e2e0db;
+            border-radius: 14px;
+            padding: 16px 18px 14px;
+            font-family: 'Source Serif 4', Georgia, serif;
+            color: #2b2b2b;
+            cursor: pointer;
+            transition: box-shadow 0.15s, border-color 0.15s;
+        }
+
+        .sidebar-card:hover {
+            box-shadow: 0 3px 12px rgba(0,0,0,0.10);
+            border-color: #c8c4be;
+        }
+
+        .sidebar-card.active {
+            border-color: #2c5f9e;
+            box-shadow: 0 0 0 2px rgba(44,95,158,0.18);
+        }
+
+        .sidebar-card h3 {
+            margin: 0 0 10px 0;
+            font-family: 'Lora', Georgia, serif;
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1.3;
+            color: #1a1a1a;
+        }
+
+        .sidebar-card .badges {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .sidebar-card .badge {
+            display: inline-flex;
+            align-items: flex-start;
+            gap: 5px;
+            background: #f7f6f3;
+            border: 1px solid #e0ddd8;
+            border-radius: 10px;
+            padding: 3px 10px;
+            font-size: 11.5px;
+            color: #555;
+            white-space: normal;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            min-width: 0;
+        }
+
+        .sidebar-card .badge svg {
+            flex-shrink: 0;
+            opacity: 0.55;
+            margin-top: 2px;
+        }
+
+        .sidebar-card .rent-block {
+            font-size: 12px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .sidebar-card .rent-block strong { color: #333; }
+
+        .sidebar-card .rent-block ul {
+            margin: 3px 0 0 14px;
+            padding: 0;
+        }
+
+        .sidebar-card .rent-block li { margin-bottom: 1px; }
+
+        .sidebar-card .evt-desc {
+            font-size: 12.5px;
+            line-height: 1.5;
+            color: #666;
+            margin: 0 0 10px 0;
+        }
+
+        .sidebar-card .cta {
+            display: inline-block;
+            background: #d6e4f7;
+            color: #2c5f9e;
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            transition: background 0.15s;
+        }
+
+        .sidebar-card .cta:hover { background: #bdd4ef; }
+        .sidebar-card .cta::after { content: " →"; }
+
+        .sidebar-empty {
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 13.5px;
+            color: #aaa;
+            text-align: center;
+            padding: 40px 20px;
+        }
 
         .controls {
             position: absolute;
@@ -98,10 +247,123 @@
             cursor: pointer;
         }
 
-        /* ── Popup base ───────────────────────────────────────────────── */
-        .popup h3 { margin: 0 0 6px 0; }
-        .popup p  { margin: 3px 0; }
-        .popup ul { margin: 4px 0 6px 16px; }
+        /* ── Carousel controls ────────────────────────────────────────── */
+        .popup-carousel {
+            min-width: 260px;
+        }
+        .mapboxgl-popup-content {
+            padding: 0;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.10);
+            border: 1px solid #e8e8e8;
+            background: #f7f6f3;
+            max-width: 360px;
+            overflow: hidden;
+        }
+
+        .mapboxgl-popup-close-button {
+            font-size: 18px;
+            color: #888;
+            padding: 8px 12px;
+            line-height: 1;
+            z-index: 1;
+        }
+
+        .mapboxgl-popup-close-button:hover {
+            background: transparent;
+            color: #333;
+        }
+
+        .apt-popup {
+            padding: 20px 22px 18px;
+            font-family: 'Source Serif 4', Georgia, serif;
+            color: #2b2b2b;
+        }
+
+        .apt-popup h3 {
+            margin: 0 0 12px 0;
+            font-family: 'Lora', Georgia, serif;
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.25;
+            color: #1a1a1a;
+        }
+
+        .apt-popup .badges {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .apt-popup .badge {
+            display: inline-flex;
+            align-items: flex-start;
+            gap: 5px;
+            background: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 4px 12px;
+            font-size: 12.5px;
+            color: #444;
+            white-space: normal;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            min-width: 0;
+        }
+
+        .apt-popup .badge svg {
+            flex-shrink: 0;
+            opacity: 0.6;
+            margin-top: 2px;
+        }
+
+        .apt-popup .evt-desc {
+            font-size: 13.5px;
+            line-height: 1.55;
+            color: #555;
+            margin: 0 0 14px 0;
+        }
+
+        .apt-popup .rent-block {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 14px;
+        }
+
+        .apt-popup .rent-block strong {
+            color: #333;
+        }
+
+        .apt-popup .rent-block ul {
+            margin: 4px 0 0 16px;
+            padding: 0;
+        }
+
+        .apt-popup .rent-block li {
+            margin-bottom: 2px;
+        }
+
+        .apt-popup .cta {
+            display: inline-block;
+            background: #d6e4f7;
+            color: #2c5f9e;
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 13.5px;
+            font-weight: 600;
+            text-decoration: none;
+            padding: 9px 18px;
+            border-radius: 10px;
+            transition: background 0.15s;
+        }
+
+        .apt-popup .cta:hover {
+            background: #bdd4ef;
+        }
+
+        .apt-popup .cta::after {
+            content: " →";
+        }
 
         /* ── Carousel controls ────────────────────────────────────────── */
         .popup-carousel {
@@ -142,17 +404,6 @@
         .carousel-counter {
             font-size: 12px;
             color: #6b7280;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .filter-group label{
-            font-size: 13px;
-            color: #374151;
         }
 
         .filter-group input[type="range"] {
@@ -200,6 +451,14 @@
 
 <div id="map"></div>
 
+<div id="sidebar">
+    <div id="sidebar-header">
+        <h2 id="sidebar-title">Apartments</h2>
+        <div id="sidebar-count"></div>
+    </div>
+    <div id="sidebar-list"></div>
+</div>
+
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
 <script>
 mapboxgl.accessToken = "{{ mapbox_token }}";
@@ -211,7 +470,13 @@ const map = new mapboxgl.Map({
     zoom: 11
 });
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Icons ─────────────────────────────────────────────────────────────────────
+
+const pinIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>`;
+const calIcon  = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+const phoneIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.93 5.18 2 2 0 012.92 3h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 10.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>`;
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function escapeHtml(text) {
     if (!text) return "";
@@ -219,41 +484,267 @@ function escapeHtml(text) {
         .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-function buildBedsRent(rentData) {
-    if (!rentData || Object.keys(rentData).length === 0)
-        return "<p><strong>Rent:</strong> N/A</p>";
-    let html = "<p><strong>Rent:</strong></p><ul>";
-    for (const [bed, price] of Object.entries(rentData))
-        html += `<li>${escapeHtml(bed)} — ${escapeHtml(price)}</li>`;
-    return html + "</ul>";
-}
-
 function extractPriceNumber(priceText) {
     if (!priceText) return null;
-
     const matches = String(priceText).match(/\d[\d,]*/g);
     if (!matches || matches.length === 0) return null;
-
-    const values = matches
-        .map(value => Number(value.replace(/,/g, "")))
-        .filter(value => !Number.isNaN(value));
-
+    const values = matches.map(v => Number(v.replace(/,/g, ""))).filter(v => !Number.isNaN(v));
     if (values.length === 0) return null;
-
     return Math.min(...values);
 }
 
 function getApartmentMinPrice(apt) {
     if (!apt.rent_by_bed) return null;
-
-    const prices = Object.values(apt.rent_by_bed)
-        .map(extractPriceNumber)
-        .filter(value => value !== null);
-
+    const prices = Object.values(apt.rent_by_bed).map(extractPriceNumber).filter(v => v !== null);
     if (prices.length === 0) return null;
-
     return Math.min(...prices);
 }
+
+function normalizeDateString(value) {
+    if (!value) return null;
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return null;
+    return parsed.toISOString().split("T")[0];
+}
+
+function eventMatchesDateRange(event, startDate, endDate) {
+    const eventDate = normalizeDateString(event.event_date);
+    if (!eventDate) return true;
+    if (startDate && eventDate < startDate) return false;
+    if (endDate && eventDate > endDate) return false;
+    return true;
+}
+
+function eventMatchesCategories(event, selectedCategories) {
+    if (selectedCategories.length === 0) return true;
+    const eventCategories = Array.isArray(event.categories) ? event.categories : [];
+    return selectedCategories.some(cat => eventCategories.includes(cat));
+}
+
+function collectEventCategories(events) {
+    const categorySet = new Set();
+    events.forEach(ev => {
+        if (Array.isArray(ev.categories)) ev.categories.forEach(c => { if (c) categorySet.add(c); });
+    });
+    return Array.from(categorySet).sort((a, b) => a.localeCompare(b));
+}
+
+function getSelectedEventCategories() {
+    return Array.from(document.querySelectorAll("#eventCategoryFilters input:checked")).map(i => i.value);
+}
+
+function buildEventCategoryFilters(categories) {
+    const container = document.getElementById("eventCategoryFilters");
+    container.innerHTML = "";
+    categories.forEach(cat => {
+        const label = document.createElement("label");
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.value = cat;
+        label.appendChild(input);
+        label.appendChild(document.createTextNode(cat));
+        container.appendChild(label);
+    });
+}
+
+function groupByCoord(events) {
+    const groups = {};
+    events.forEach(ev => {
+        const key = `${ev.longitude},${ev.latitude}`;
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(ev);
+    });
+    return groups;
+}
+
+// ── Sidebar ───────────────────────────────────────────────────────────────────
+
+const sidebarList  = document.getElementById("sidebar-list");
+const sidebarTitle = document.getElementById("sidebar-title");
+const sidebarCount = document.getElementById("sidebar-count");
+
+function buildAptSidebarCard(apt) {
+    const title   = apt.title || apt.address || "Apartment";
+    const address = apt.address || "Unknown address";
+    const phone   = apt.phone_number || null;
+    const link    = apt.link || null;
+    const rent    = apt.rent_by_bed;
+
+    let badges = `<div class="badges">`;
+    badges += `<span class="badge">${pinIcon} ${escapeHtml(address)}</span>`;
+    if (phone) badges += `<span class="badge">${phoneIcon} ${escapeHtml(phone)}</span>`;
+    badges += `</div>`;
+
+    let rentBlock = "";
+    if (rent && Object.keys(rent).length > 0) {
+        rentBlock = `<div class="rent-block"><strong>Rent</strong><ul>`;
+        for (const [bed, price] of Object.entries(rent))
+            rentBlock += `<li>${escapeHtml(bed)} — ${escapeHtml(price)}</li>`;
+        rentBlock += `</ul></div>`;
+    } else {
+        rentBlock = `<div class="rent-block"><strong>Rent:</strong> N/A</div>`;
+    }
+
+    const cta = link
+        ? `<a class="cta" href="${escapeHtml(link)}" target="_blank">View on Apartments.com</a>`
+        : "";
+
+    const card = document.createElement("div");
+    card.className = "sidebar-card";
+    card.dataset.lat = apt.lat;
+    card.dataset.lon = apt.lon;
+    card.innerHTML = `<h3>${escapeHtml(title)}</h3>${badges}${rentBlock}${cta}`;
+    return card;
+}
+
+function buildEventSidebarCard(ev) {
+    const title   = ev.event_title || "Event";
+    const address = ev.address     || "";
+    const date    = ev.event_date  || "";
+    const desc    = ev.description || "";
+    const link    = ev.event_detail_url || null;
+
+    let badges = `<div class="badges">`;
+    if (date)    badges += `<span class="badge">${calIcon} ${escapeHtml(date)}</span>`;
+    if (address) badges += `<span class="badge">${pinIcon} ${escapeHtml(address)}</span>`;
+    badges += `</div>`;
+
+    const descBlock = desc
+        ? `<p class="evt-desc">${escapeHtml(desc.length > 100 ? desc.slice(0, 100) + "…" : desc)}</p>`
+        : "";
+
+    const cta = link
+        ? `<a class="cta" href="${escapeHtml(link)}" target="_blank">View on Catch Des Moines</a>`
+        : "";
+
+    const card = document.createElement("div");
+    card.className = "sidebar-card";
+    card.dataset.lat = ev.latitude;
+    card.dataset.lon = ev.longitude;
+    card.innerHTML = `<h3>${escapeHtml(title)}</h3>${badges}${descBlock}${cta}`;
+    return card;
+}
+
+function populateSidebarApartments(apartments, maxPrice) {
+    sidebarTitle.textContent = "Apartments";
+    sidebarList.innerHTML = "";
+
+    const filtered = apartments
+        .filter(apt => apt.lat && apt.lon)
+        .filter(apt => {
+            const minPrice = getApartmentMinPrice(apt);
+            return minPrice === null || minPrice <= maxPrice;
+        });
+
+    sidebarCount.textContent = `${filtered.length} listing${filtered.length !== 1 ? "s" : ""}`;
+
+    if (filtered.length === 0) {
+        sidebarList.innerHTML = `<div class="sidebar-empty">No apartments match the current filters.</div>`;
+        return;
+    }
+
+    filtered.forEach(apt => {
+        const card = buildAptSidebarCard(apt);
+        card.addEventListener("click", () => {
+            document.querySelectorAll(".sidebar-card").forEach(c => c.classList.remove("active"));
+            card.classList.add("active");
+            map.flyTo({ center: [apt.lon, apt.lat], zoom: 15 });
+        });
+        sidebarList.appendChild(card);
+    });
+}
+
+function populateSidebarEvents(events) {
+    sidebarTitle.textContent = "Events";
+    sidebarList.innerHTML = "";
+
+    const filtered = events.filter(ev => ev.latitude != null && ev.longitude != null);
+    sidebarCount.textContent = `${filtered.length} event${filtered.length !== 1 ? "s" : ""}`;
+
+    if (filtered.length === 0) {
+        sidebarList.innerHTML = `<div class="sidebar-empty">No events match the current filters.</div>`;
+        return;
+    }
+
+    filtered.forEach(ev => {
+        const card = buildEventSidebarCard(ev);
+        card.addEventListener("click", () => {
+            document.querySelectorAll(".sidebar-card").forEach(c => c.classList.remove("active"));
+            card.classList.add("active");
+            map.flyTo({ center: [ev.longitude, ev.latitude], zoom: 15 });
+        });
+        sidebarList.appendChild(card);
+    });
+}
+
+// ── Popup builders ────────────────────────────────────────────────────────────
+
+function buildAptPopupHTML(apt) {
+    const title   = apt.title || apt.address || "Apartment";
+    const address = apt.address || "Unknown address";
+    const phone   = apt.phone_number || null;
+    const link    = apt.link || null;
+    const rent    = apt.rent_by_bed;
+
+    let badges = `<div class="badges">`;
+    badges += `<span class="badge">${pinIcon} ${escapeHtml(address)}</span>`;
+    if (phone) badges += `<span class="badge">${phoneIcon} ${escapeHtml(phone)}</span>`;
+    badges += `</div>`;
+
+    let rentBlock = "";
+    if (rent && Object.keys(rent).length > 0) {
+        rentBlock = `<div class="rent-block"><strong>Rent</strong><ul>`;
+        for (const [bed, price] of Object.entries(rent)) {
+            rentBlock += `<li>${escapeHtml(bed)} — ${escapeHtml(price)}</li>`;
+        }
+        rentBlock += `</ul></div>`;
+    } else {
+        rentBlock = `<div class="rent-block"><strong>Rent:</strong> N/A</div>`;
+    }
+
+    const cta = link
+        ? `<a class="cta" href="${escapeHtml(link)}" target="_blank">View on Apartments.com</a>`
+        : "";
+
+    return `
+        <div class="apt-popup">
+            <h3>${escapeHtml(title)}</h3>
+            ${badges}
+            ${rentBlock}
+            ${cta}
+        </div>`;
+}
+
+function buildEventCardHTML(event) {
+    const title   = event.event_title || "Event";
+    const address = event.address     || "";
+    const date    = event.event_date  || "";
+    const desc    = event.description || "";
+    const link    = event.event_detail_url || null;
+
+    let badges = `<div class="badges">`;
+    if (date)    badges += `<span class="badge">${calIcon} ${escapeHtml(date)}</span>`;
+    if (address) badges += `<span class="badge wrappable">${pinIcon} ${escapeHtml(address)}</span>`;
+    badges += `</div>`;
+
+    const descBlock = desc
+        ? `<p class="evt-desc">${escapeHtml(desc.length > 120 ? desc.slice(0, 120) + "…" : desc)}</p>`
+        : "";
+
+    const cta = link
+        ? `<a class="cta" href="${escapeHtml(link)}" target="_blank">View on Catch Des Moines</a>`
+        : "";
+
+    return `
+        <div class="apt-popup">
+            <h3>${escapeHtml(title)}</h3>
+            ${badges}
+            ${descBlock}
+            ${cta}
+        </div>`;
+}
+
+// ── GeoJSON builders ──────────────────────────────────────────────────────────
 
 function buildApartmentGeoJSON(apartments, maxPrice) {
     return {
@@ -262,10 +753,7 @@ function buildApartmentGeoJSON(apartments, maxPrice) {
             .filter(apt => apt.lat && apt.lon)
             .filter(apt => {
                 const minPrice = getApartmentMinPrice(apt);
-
-                // Keep listings with no parsed price so they still show up
                 if (minPrice === null) return true;
-
                 return minPrice <= maxPrice;
             })
             .map(apt => ({
@@ -279,35 +767,8 @@ function buildApartmentGeoJSON(apartments, maxPrice) {
     };
 }
 
-function normalizeDateString(value) {
-    if (!value) return null;
-
-    const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) return null;
-
-    return parsed.toISOString().split("T")[0];
-}
-
-function eventMatchesDateRange(event, startDate, endDate) {
-    const eventDate = normalizeDateString(event.event_date);
-    if (!eventDate) return true;
-
-    if (startDate && eventDate < startDate) return false;
-    if (endDate && eventDate > endDate) return false;
-
-    return true;
-}
-
-function eventMatchesCategories(event, selectedCategories) {
-    if (selectedCategories.length === 0) return true;
-
-    const eventCategories = Array.isArray(event.categories) ? event.categories : [];
-    return selectedCategories.some(category => eventCategories.includes(category));
-}
-
-function buildEventGeoJSON(events, startDate, endDate, selectedCategories) {
+function buildEventGeoJSON(events) {
     const grouped = groupByCoord(events);
-
     return {
         type: "FeatureCollection",
         features: Object.entries(grouped).map(([key, evs]) => {
@@ -325,78 +786,12 @@ function buildEventGeoJSON(events, startDate, endDate, selectedCategories) {
     };
 }
 
-function collectEventCategories(events) {
-    const categorySet = new Set();
-
-    events.forEach(event => {
-        if (Array.isArray(event.categories)) {
-            event.categories.forEach(category => {
-                if (category) categorySet.add(category);
-            });
-        }
-    });
-
-    return Array.from(categorySet).sort((a, b) => a.localeCompare(b));
-}
-
-function getSelectedEventCategories() {
-    return Array.from(document.querySelectorAll("#eventCategoryFilters input:checked"))
-        .map(input => input.value);
-}
-
-function buildEventCategoryFilters(categories) {
-    const container = document.getElementById("eventCategoryFilters");
-    container.innerHTML = "";
-
-    categories.forEach(category => {
-        const label = document.createElement("label");
-
-        const input = document.createElement("input");
-        input.type = "checkbox";
-        input.value = category;
-
-        label.appendChild(input);
-        label.appendChild(document.createTextNode(category));
-        container.appendChild(label);
-    });
-}
-
-function buildAptPopupHTML(apt) {
-    const title   = apt.title   || apt.address || "Apartment";
-    const address = apt.address || "Unknown address";
-    const phone   = apt.phone_number || "N/A";
-    const link    = apt.link || null;
-    return `
-        <div class="popup">
-            <h3>${escapeHtml(title)}</h3>
-            <p>${escapeHtml(address)}</p>
-            ${buildBedsRent(apt.rent_by_bed)}
-            <p><strong>Phone:</strong> ${escapeHtml(phone)}</p>
-            ${link ? `<p><a href="${escapeHtml(link)}" target="_blank">View on Apartments.com</a></p>` : ""}
-        </div>`;
-}
-
-function buildEventCardHTML(event) {
-    const title   = event.event_title || "Event";
-    const address = event.address     || "";
-    const date    = event.event_date  || "";
-    const desc    = event.description || "";
-    const link    = event.event_detail_url || null;
-    return `
-        <h3>${escapeHtml(title)}</h3>
-        ${date    ? `<p><strong>${escapeHtml(date)}</strong></p>` : ""}
-        ${address ? `<p>${escapeHtml(address)}</p>` : ""}
-        ${desc    ? `<p>${escapeHtml(desc.length > 120 ? desc.slice(0, 120) + "…" : desc)}</p>` : ""}
-        ${link    ? `<p><a href="${escapeHtml(link)}" target="_blank">View on Catch Des Moines</a></p>` : ""}`;
-}
-
-// ── Event carousel popup ──────────────────────────────────────────────────────
+// ── Carousel popup (events) ───────────────────────────────────────────────────
 
 function buildEventCarouselNode(events) {
     let index = 0;
-
     const wrapper = document.createElement("div");
-    wrapper.className = "popup popup-carousel";
+    wrapper.className = "apt-popup popup-carousel";
 
     const content = document.createElement("div");
     content.className = "carousel-content";
@@ -423,12 +818,8 @@ function buildEventCarouselNode(events) {
         nav.appendChild(nextBtn);
         wrapper.appendChild(nav);
 
-        prevBtn.addEventListener("click", () => {
-            if (index > 0) { index--; render(); }
-        });
-        nextBtn.addEventListener("click", () => {
-            if (index < events.length - 1) { index++; render(); }
-        });
+        prevBtn.addEventListener("click", () => { if (index > 0) { index--; render(); } });
+        nextBtn.addEventListener("click", () => { if (index < events.length - 1) { index++; render(); } });
     }
 
     function render() {
@@ -444,29 +835,13 @@ function buildEventCarouselNode(events) {
     return wrapper;
 }
 
-// ── Group events by coordinate key ───────────────────────────────────────────
-
-function groupByCoord(events) {
-    const groups = {};
-    events.forEach(ev => {
-        const key = `${ev.longitude},${ev.latitude}`;
-        if (!groups[key]) groups[key] = [];
-        groups[key].push(ev);
-    });
-    return groups;
-}
-
-// ── Visibility helpers ────────────────────────────────────────────────────────
+// ── Layer helpers ─────────────────────────────────────────────────────────────
 
 function setLayerGroupVisibility(prefix, visible) {
     const v = visible ? "visible" : "none";
     [`${prefix}-clusters`, `${prefix}-cluster-count`, `${prefix}-unclustered-point`]
-        .forEach(id => {
-            if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", v);
-        });
+        .forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", v); });
 }
-
-// ── Build a clustered source + 3 layers ──────────────────────────────────────
 
 function addClusteredLayer(prefix, geojson, color, darkColor, veryDarkColor) {
     map.addSource(prefix, {
@@ -483,14 +858,8 @@ function addClusteredLayer(prefix, geojson, color, darkColor, veryDarkColor) {
         source: prefix,
         filter: ["has", "point_count"],
         paint: {
-            "circle-color": [
-                "step", ["get", "point_count"],
-                color, 10, darkColor, 30, veryDarkColor
-            ],
-            "circle-radius": [
-                "step", ["get", "point_count"],
-                20, 10, 28, 30, 36
-            ],
+            "circle-color": ["step", ["get", "point_count"], color, 10, darkColor, 30, veryDarkColor],
+            "circle-radius": ["step", ["get", "point_count"], 20, 10, 28, 30, 36],
             "circle-opacity": 0.85,
             "circle-stroke-width": 2,
             "circle-stroke-color": "#fff"
@@ -543,103 +912,66 @@ function addClusteredLayer(prefix, geojson, color, darkColor, veryDarkColor) {
 let eventGroups = {};
 
 map.on("load", () => {
-
     Promise.all([
         fetch("/static/bs-results/apartments-test.json").then(r => r.json()),
         fetch("/static/bs-results/catchdesmoines-events.json").then(r => r.json())
     ]).then(([apartments, events]) => {
 
-        // ── Apartments (blue) ─────────────────────────────────────────────
-        const priceRange = document.getElementById("priceRange");
-        const priceValue = document.getElementById("priceValue");
+        const priceRange      = document.getElementById("priceRange");
+        const priceValue      = document.getElementById("priceValue");
         const apartmentFilters = document.getElementById("apartment-filters");
-        const eventFilters = document.getElementById("event-filters");
-        const eventStartDate = document.getElementById("eventStartDate");
-        const eventEndDate = document.getElementById("eventEndDate");
+        const eventFilters    = document.getElementById("event-filters");
+        const eventStartDate  = document.getElementById("eventStartDate");
+        const eventEndDate    = document.getElementById("eventEndDate");
 
+        // ── Apartments ────────────────────────────────────────────────────
         function updateApartmentLayer(maxPrice) {
             const priceNumber = Number(maxPrice);
             priceRange.value = priceNumber;
             priceValue.value = priceNumber;
-
-            const aptGeoJSON = buildApartmentGeoJSON(apartments, priceNumber);
-            map.getSource("apartments").setData(aptGeoJSON);
+            map.getSource("apartments").setData(buildApartmentGeoJSON(apartments, priceNumber));
+            populateSidebarApartments(apartments, priceNumber);
         }
 
         const initialAptGeoJSON = buildApartmentGeoJSON(apartments, Number(priceRange.value));
         priceValue.value = priceRange.value;
-
         addClusteredLayer("apartments", initialAptGeoJSON, "#3B82F6", "#2563EB", "#1E3A8A");
+        populateSidebarApartments(apartments, Number(priceRange.value));
 
         map.on("click", "apartments-unclustered-point", e => {
             const coords = e.features[0].geometry.coordinates.slice();
             const { popupHTML } = e.features[0].properties;
             while (Math.abs(e.lngLat.lng - coords[0]) > 180)
                 coords[0] += e.lngLat.lng > coords[0] ? 360 : -360;
-            new mapboxgl.Popup({ offset: 12 })
+            new mapboxgl.Popup({ offset: 12, maxWidth: "320px" })
                 .setLngLat(coords)
                 .setHTML(popupHTML)
                 .addTo(map);
         });
 
-        priceRange.addEventListener("input", () => {
-            updateApartmentLayer(priceRange.value);
-        });
+        priceRange.addEventListener("input", () => updateApartmentLayer(priceRange.value));
 
         priceValue.addEventListener("change", () => {
-            let typedValue = Number(priceValue.value);
-
-            if (Number.isNaN(typedValue)) {
-                priceValue.value = priceRange.value;
-                return;
-            }
-
-            if (typedValue < Number(priceRange.min)) {
-                typedValue = Number(priceRange.min);
-            }
-
-            if (typedValue > Number(priceRange.max)) {
-                typedValue = Number(priceRange.max);
-            }
-
-            updateApartmentLayer(typedValue);
+            let v = Number(priceValue.value);
+            if (Number.isNaN(v)) { priceValue.value = priceRange.value; return; }
+            v = Math.max(Number(priceRange.min), Math.min(Number(priceRange.max), v));
+            updateApartmentLayer(v);
         });
-        
+
         priceValue.addEventListener("blur", () => {
-            let typedValue = Number(priceValue.value);
-            if (Number.isNaN(typedValue)) {
-                priceValue.value = priceRange.value;
-                return;
-            }
-                if (typedValue < Number(priceRange.min)) {
-                    typedValue = Number(priceRange.min);
-                }
-
-                if (typedValue > Number(priceRange.max)) {
-                    typedValue = Number(priceRange.max);
-                }
-                updateApartmentLayer(typedValue);
+            let v = Number(priceValue.value);
+            if (Number.isNaN(v)) { priceValue.value = priceRange.value; return; }
+            v = Math.max(Number(priceRange.min), Math.min(Number(priceRange.max), v));
+            updateApartmentLayer(v);
         });
 
-        eventStartDate.addEventListener("change", () => {
-            updateEventLayer();
-        });
-
-        eventEndDate.addEventListener("change", () => {
-            updateEventLayer();
-        });
-
-        document.getElementById("eventCategoryFilters").addEventListener("change", () => {
-            updateEventLayer();
-        });
-
-        // ── Events (red) ──────────────────────────────────────────────────
+        // ── Events ────────────────────────────────────────────────────────
         const allEventCategories = collectEventCategories(events);
         buildEventCategoryFilters(allEventCategories);
 
         function updateEventLayer() {
             const startDate = eventStartDate.value || null;
-            const endDate = eventEndDate.value || null;
+            const endDate   = eventEndDate.value   || null;
             const selectedCategories = getSelectedEventCategories();
 
             const filteredEvents = events.filter(ev => {
@@ -649,33 +981,28 @@ map.on("load", () => {
                 return true;
             });
 
-        eventGroups = groupByCoord(filteredEvents);
+            eventGroups = groupByCoord(filteredEvents);
+            map.getSource("events").setData(buildEventGeoJSON(filteredEvents));
+            populateSidebarEvents(filteredEvents);
+        }
 
-        // One GeoJSON point per unique coordinate
-        const eventGeoJSON = buildEventGeoJSON(filteredEvents);
-        map.getSource("events").setData(eventGeoJSON);
-    }
+        eventStartDate.addEventListener("change", updateEventLayer);
+        eventEndDate.addEventListener("change", updateEventLayer);
+        document.getElementById("eventCategoryFilters").addEventListener("change", updateEventLayer);
 
         const initialFilteredEvents = events.filter(ev => ev.latitude != null && ev.longitude != null);
-        const initialEventGeoJSON = buildEventGeoJSON(initialFilteredEvents);
         eventGroups = groupByCoord(initialFilteredEvents);
-
-        addClusteredLayer("events", initialEventGeoJSON, "#EF4444", "#DC2626", "#991B1B");
-
+        addClusteredLayer("events", buildEventGeoJSON(initialFilteredEvents), "#EF4444", "#DC2626", "#991B1B");
         setLayerGroupVisibility("events", false);
 
-        // Event popup with carousel
         map.on("click", "events-unclustered-point", e => {
             const coords = e.features[0].geometry.coordinates.slice();
             const { coordKey } = e.features[0].properties;
-
             while (Math.abs(e.lngLat.lng - coords[0]) > 180)
                 coords[0] += e.lngLat.lng > coords[0] ? 360 : -360;
-
             const eventsAtLocation = eventGroups[coordKey] || [];
             const carouselNode = buildEventCarouselNode(eventsAtLocation);
-
-            new mapboxgl.Popup({ offset: 12 })
+            new mapboxgl.Popup({ offset: 12, maxWidth: "380px" })
                 .setLngLat(coords)
                 .setDOMContent(carouselNode)
                 .addTo(map);
@@ -687,13 +1014,27 @@ map.on("load", () => {
             setLayerGroupVisibility("apartments", showApts);
             setLayerGroupVisibility("events",    !showApts);
             apartmentFilters.style.display = showApts ? "flex" : "none";
-            eventFilters.style.display = showApts ? "none" : "flex";
+            eventFilters.style.display     = showApts ? "none"  : "flex";
+            if (showApts) {
+                populateSidebarApartments(apartments, Number(priceRange.value));
+            } else {
+                const startDate = eventStartDate.value || null;
+                const endDate   = eventEndDate.value   || null;
+                const selectedCategories = getSelectedEventCategories();
+                const filteredEvents = events.filter(ev => {
+                    if (ev.latitude == null || ev.longitude == null) return false;
+                    if (!eventMatchesDateRange(ev, startDate, endDate)) return false;
+                    if (!eventMatchesCategories(ev, selectedCategories)) return false;
+                    return true;
+                });
+                populateSidebarEvents(filteredEvents);
+            }
         }
+
         document.querySelectorAll('input[name="layer"]').forEach(radio => {
-            radio.addEventListener("change", e => {
-                updateVisibleLayer(e.target.value);
-            });
+            radio.addEventListener("change", e => updateVisibleLayer(e.target.value));
         });
+
         const selectedLayer = document.querySelector('input[name="layer"]:checked')?.value || "apartments";
         updateVisibleLayer(selectedLayer);
     });
