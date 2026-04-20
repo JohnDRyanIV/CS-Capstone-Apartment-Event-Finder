@@ -1,15 +1,20 @@
 from flask import (
-    Flask, render_template, make_response, 
+    Flask, render_template, make_response, jsonify, Response, 
     abort
 )
 from flask_restful import Api, request, Resource
 from flask_bcrypt import Bcrypt
 from datetime import datetime
 from dotenv import load_dotenv
+
+from azure.storage.blob import BlobServiceClient
+
 import pyodbc
 import os
 import hmac
 import hashlib
+
+
 
 
 # Constants
@@ -30,6 +35,9 @@ if "WEBSITE_HOSTNAME" not in os.environ:
 CONNECTION_STRING = os.environ["AZURE_SQL_CONNECTIONSTRING"]
 APP_SECRET = os.environ["FLASK_SECRET_KEY"]
 MAPBOX_TOKEN = os.environ["MAPBOX_TOKEN"]
+blob_service = BlobServiceClient.from_connection_string(
+    os.environ["AZURE_STORAGE_CONNECTION_STRING"]
+)
 
 
 # Initialize the flask app here
@@ -321,10 +329,30 @@ def get_user_from_session(cookie):
 def index():
     return render_template("index.html", name="Index")
 
+@app.route("/data/apartments")
+def apartments():
+    try:
+        blob_client = blob_service.get_blob_client(container="jsons", blob="apartments.json")
+        data = blob_client.download_blob().readall()
+        return Response(data, mimetype="application/json")
+    except Exception as e:
+        print(e)
+        return Response(str(e), status=500)
+
+@app.route("/data/events")
+def events():
+    blob_client = blob_service.get_blob_client(container="jsons", blob="catchdesmoines-events.json")
+    data = blob_client.download_blob().readall()
+    return Response(data, mimetype="application/json")
+
 @app.route("/map")
 def map_page():
     mapbox_token = os.getenv("MAPBOX_TOKEN")
-    return render_template("maps-test.html", mapbox_token=mapbox_token)
+    return render_template("maps.html", mapbox_token=mapbox_token)
+
+@app.route("/test")
+def test():
+    return render_template("test.html")
 
 @app.route("/signup")
 def signup_form():

@@ -42,3 +42,9 @@ bs-test/
 # Other
 /scrapers
 /geolocation
+
+# bs-results (now fetched from Azure instead of project repo)
+apartments.json
+apartments-test.json
+catchdesmoines-events.json
+
