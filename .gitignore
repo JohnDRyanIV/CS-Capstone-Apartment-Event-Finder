@@ -38,6 +38,7 @@ git-password.txt
 # Quick testing
 test.py
 bs-test/
+json-test.py
 
 # Other
 /scrapers
@@ -46,5 +47,9 @@ bs-test/
 # bs-results (now fetched from Azure instead of project repo)
 apartments.json
 apartments-test.json
+apartment_locations.json
 catchdesmoines-events.json
+
+# Azure Uploader
+azure-json-uploader.py
 

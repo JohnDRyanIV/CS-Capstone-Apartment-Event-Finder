@@ -87,6 +87,24 @@ function buildEventCategoryFilters(categories, containerId, horizontal = false) 
     });
 }
 
+function formatEventDate(isoStr) {
+    if (!isoStr) return null;
+    const d = new Date(isoStr);
+    if (isNaN(d)) return null;
+    const hasTime = !isoStr.endsWith("T23:59:59"); // end-of-day default means no real time
+    const datePart = d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    if (!hasTime) return datePart;
+    const timePart = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    return `${datePart} · ${timePart}`;
+}
+
+function isEventInFuture(ev) {
+    const isoStr = ev.event_start_date;
+    if (!isoStr) return true; // no date info, show it
+    const d = new Date(isoStr);
+    return isNaN(d) || d > new Date();
+}
+
 function groupByCoord(events) {
     const groups = {};
     events.forEach(ev => {
@@ -99,6 +117,16 @@ function groupByCoord(events) {
 
 function isMobile() {
     return window.innerWidth < 768;
+}
+
+// ── Active popup tracker ───────────────────────────────────────────────────────
+let activePopup = null;
+
+function openPopup(popup) {
+    if (activePopup) activePopup.remove();
+    activePopup = popup;
+    popup.on("close", () => { activePopup = null; });
+    popup.addTo(map);
 }
 
 // ── Sidebar ────────────────────────────────────────────────────────────────────
@@ -119,18 +147,26 @@ function buildAptSidebarCard(apt) {
     const phone   = apt.phone_number || null;
     const link    = apt.link || null;
     const rent    = apt.rent_by_bed;
+    const mobile  = isMobile();
 
-    let badges = `<div class="badges">`;
-    badges += `<span class="badge-item">${pinIcon} ${escapeHtml(address)}</span>`;
-    if (phone) badges += `<span class="badge-item">${phoneIcon} ${escapeHtml(phone)}</span>`;
+    // Badges: desktop shows phone too, mobile skips it
+    let badges = `<div class="badges"><span class="badge-item">${pinIcon} ${escapeHtml(address)}</span>`;
+    if (!mobile && phone) badges += `<span class="badge-item">${phoneIcon} ${escapeHtml(phone)}</span>`;
     badges += `</div>`;
 
     let rentBlock = "";
     if (rent && Object.keys(rent).length > 0) {
-        rentBlock = `<div class="rent-block"><strong>Rent</strong><ul>`;
-        for (const [bed, price] of Object.entries(rent))
-            rentBlock += `<li>${escapeHtml(bed)} — ${escapeHtml(price)}</li>`;
-        rentBlock += `</ul></div>`;
+        if (mobile) {
+            // Mobile: single inline line
+            const parts = Object.entries(rent).map(([bed, price]) => `${escapeHtml(bed)}: ${escapeHtml(price)}`);
+            rentBlock = `<div class="rent-block"><strong>Rent:</strong> ${parts.join(" &nbsp;|&nbsp; ")}</div>`;
+        } else {
+            // Desktop: bullet list
+            rentBlock = `<div class="rent-block"><strong>Rent</strong><ul>`;
+            for (const [bed, price] of Object.entries(rent))
+                rentBlock += `<li>${escapeHtml(bed)} — ${escapeHtml(price)}</li>`;
+            rentBlock += `</ul></div>`;
+        }
     } else {
         rentBlock = `<div class="rent-block"><strong>Rent:</strong> N/A</div>`;
     }
@@ -146,14 +182,14 @@ function buildAptSidebarCard(apt) {
 }
 
 function buildEventSidebarCard(ev) {
-    const title   = ev.event_title || "Event";
-    const address = ev.address     || "";
-    const date    = ev.event_date  || "";
-    const desc    = ev.description || "";
-    const link    = ev.event_detail_url || null;
+    const title      = ev.event_title || "Event";
+    const address    = ev.address     || "";
+    const dateStr    = formatEventDate(ev.event_start_date) || ev.event_date || "";
+    const desc       = ev.description || "";
+    const link       = ev.event_detail_url || null;
 
     let badges = `<div class="badges">`;
-    if (date)    badges += `<span class="badge-item">${calIcon} ${escapeHtml(date)}</span>`;
+    if (dateStr) badges += `<span class="badge-item">${calIcon} ${escapeHtml(dateStr)}</span>`;
     if (address) badges += `<span class="badge-item">${pinIcon} ${escapeHtml(address)}</span>`;
     badges += `</div>`;
 
@@ -194,11 +230,11 @@ function populateSidebarApartments(apartments, maxPrice) {
         card.addEventListener("click", () => {
             document.querySelectorAll(".sidebar-card").forEach(c => c.classList.remove("active"));
             card.classList.add("active");
-            map.flyTo({ center: [apt.lon, apt.lat], zoom: 15 });
-            if (isMobile() && sidebar.classList.contains("collapsed")) {
-                sidebar.classList.remove("collapsed");
-                toggleBtn.textContent = "▼";
-            }
+            map.flyTo({ center: [apt.lon, apt.lat], zoom: 15, duration: 600 });
+            const popup = new mapboxgl.Popup({ offset: 12, maxWidth: "320px" })
+                .setLngLat([apt.lon, apt.lat])
+                .setHTML(buildAptPopupHTML(apt));
+            openPopup(popup);
         });
         sidebarList.appendChild(card);
     });
@@ -221,7 +257,12 @@ function populateSidebarEvents(events) {
         card.addEventListener("click", () => {
             document.querySelectorAll(".sidebar-card").forEach(c => c.classList.remove("active"));
             card.classList.add("active");
-            map.flyTo({ center: [ev.longitude, ev.latitude], zoom: 15 });
+            map.flyTo({ center: [ev.longitude, ev.latitude], zoom: 15, duration: 600 });
+            const eventsAtLocation = eventGroups[`${ev.longitude},${ev.latitude}`] || [ev];
+            const popup = new mapboxgl.Popup({ offset: 12, maxWidth: "380px" })
+                .setLngLat([ev.longitude, ev.latitude])
+                .setDOMContent(buildEventCarouselNode(eventsAtLocation));
+            openPopup(popup);
         });
         sidebarList.appendChild(card);
     });
@@ -258,12 +299,12 @@ function buildAptPopupHTML(apt) {
 function buildEventCardHTML(event) {
     const title   = event.event_title || "Event";
     const address = event.address     || "";
-    const date    = event.event_date  || "";
+    const dateStr = formatEventDate(event.event_start_date) || event.event_date || "";
     const desc    = event.description || "";
     const link    = event.event_detail_url || null;
 
     let badges = `<div class="badges">`;
-    if (date)    badges += `<span class="badge-item">${calIcon} ${escapeHtml(date)}</span>`;
+    if (dateStr) badges += `<span class="badge-item">${calIcon} ${escapeHtml(dateStr)}</span>`;
     if (address) badges += `<span class="badge-item">${pinIcon} ${escapeHtml(address)}</span>`;
     badges += `</div>`;
 
@@ -388,7 +429,12 @@ function addClusteredLayer(prefix, geojson, color, darkColor, veryDarkColor) {
     map.addLayer({
         id: `${prefix}-unclustered-point`, type: "circle", source: prefix,
         filter: ["!", ["has", "point_count"]],
-        paint: { "circle-radius": 8, "circle-color": color, "circle-stroke-width": 2, "circle-stroke-color": "#fff" }
+        paint: {
+            "circle-radius": 8,
+            "circle-color": color,
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "#fff"
+        }
     });
 
     map.on("click", `${prefix}-clusters`, e => {
@@ -404,6 +450,25 @@ function addClusteredLayer(prefix, geojson, color, darkColor, veryDarkColor) {
     map.on("mouseenter", `${prefix}-unclustered-point`, () => map.getCanvas().style.cursor = "pointer");
     map.on("mouseleave", `${prefix}-unclustered-point`, () => map.getCanvas().style.cursor = "");
 }
+
+// ── Pin size for mobile ────────────────────────────────────────────────────────
+function updatePinSize() {
+    const radius = isMobile() ? 14 : 8;
+    ["apartments-unclustered-point", "events-unclustered-point"].forEach(id => {
+        if (map.getLayer(id)) map.setPaintProperty(id, "circle-radius", radius);
+    });
+}
+
+let wasMobile = isMobile();
+window.addEventListener("resize", () => {
+    updatePinSize();
+    const nowMobile = isMobile();
+    if (nowMobile !== wasMobile) {
+        wasMobile = nowMobile;
+        // Trigger sidebar rebuild so card format updates
+        window.dispatchEvent(new Event("breakpointchange"));
+    }
+});
 
 // ── Main ───────────────────────────────────────────────────────────────────────
 let eventGroups = {};
@@ -452,8 +517,8 @@ map.on("load", () => {
             const { popupHTML } = e.features[0].properties;
             while (Math.abs(e.lngLat.lng - coords[0]) > 180)
                 coords[0] += e.lngLat.lng > coords[0] ? 360 : -360;
-            new mapboxgl.Popup({ offset: 12, maxWidth: "320px" })
-                .setLngLat(coords).setHTML(popupHTML).addTo(map);
+            openPopup(new mapboxgl.Popup({ offset: 12, maxWidth: "320px" })
+                .setLngLat(coords).setHTML(popupHTML));
         });
 
         // ── Event categories ─────────────────────────────────────────────────
@@ -475,6 +540,7 @@ map.on("load", () => {
             const { startDate, endDate, categories } = getActiveEventFilters();
             const filteredEvents = events.filter(ev => {
                 if (ev.latitude == null || ev.longitude == null) return false;
+                if (!isEventInFuture(ev)) return false;
                 if (!eventMatchesDateRange(ev, startDate, endDate)) return false;
                 if (!eventMatchesCategories(ev, categories)) return false;
                 return true;
@@ -489,10 +555,11 @@ map.on("load", () => {
         document.getElementById("eventCategoryFilters").addEventListener("change", updateEventLayer);
         document.getElementById("eventCategoryFiltersMobile").addEventListener("change", updateEventLayer);
 
-        const initialFilteredEvents = events.filter(ev => ev.latitude != null && ev.longitude != null);
+        const initialFilteredEvents = events.filter(ev => ev.latitude != null && ev.longitude != null && isEventInFuture(ev));
         eventGroups = groupByCoord(initialFilteredEvents);
         addClusteredLayer("events", buildEventGeoJSON(initialFilteredEvents), "#EF4444", "#DC2626", "#991B1B");
         setLayerGroupVisibility("events", false);
+        updatePinSize();
 
         map.on("click", "events-unclustered-point", e => {
             const coords = e.features[0].geometry.coordinates.slice();
@@ -500,8 +567,8 @@ map.on("load", () => {
             while (Math.abs(e.lngLat.lng - coords[0]) > 180)
                 coords[0] += e.lngLat.lng > coords[0] ? 360 : -360;
             const eventsAtLocation = eventGroups[coordKey] || [];
-            new mapboxgl.Popup({ offset: 12, maxWidth: "380px" })
-                .setLngLat(coords).setDOMContent(buildEventCarouselNode(eventsAtLocation)).addTo(map);
+            openPopup(new mapboxgl.Popup({ offset: 12, maxWidth: "380px" })
+                .setLngLat(coords).setDOMContent(buildEventCarouselNode(eventsAtLocation)));
         });
 
         // ── Layer toggle (shared radio buttons across desktop + mobile) ──────
@@ -542,5 +609,15 @@ map.on("load", () => {
         });
 
         updateVisibleLayer("apartments");
+
+        // Rebuild cards when crossing mobile/desktop breakpoint
+        window.addEventListener("breakpointchange", () => {
+            const currentLayer = document.querySelector('input[name="layer"]:checked')?.value || "apartments";
+            if (currentLayer === "apartments") {
+                populateSidebarApartments(apartments, Number(priceRange.value));
+            } else {
+                updateEventLayer();
+            }
+        });
     });
 });

@@ -1,6 +1,11 @@
 /* ── Reset & base ──────────────────────────────────────────────────────────── */
 html, body { height: 100%; margin: 0; overflow: hidden; }
 
+/* Prevent browser pinch-zoom on UI elements so map handles it instead */
+#sidebar, #topbar, #desktop-controls {
+    touch-action: pan-y;
+}
+
 body {
     font-family: Arial, sans-serif;
     display: flex;
@@ -64,25 +69,79 @@ body {
     font-family: 'Source Serif 4', Georgia, serif;
 }
 
-/* Mobile sidebar: fixed height at bottom, collapsible */
+/* Mobile sidebar: overlays the bottom of the map, collapsible */
 @media (max-width: 767px) {
+    #main-content {
+        position: relative;
+    }
+
     #sidebar {
-        height: 280px;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 45vh;
         border-top: 1px solid #e0ddd8;
+        border-radius: 14px 14px 0 0;
+        box-shadow: 0 -4px 16px rgba(0,0,0,0.12);
         transition: height 0.3s ease;
+        z-index: 5;
     }
 
     #sidebar.collapsed {
-        height: 48px; /* just the header */
+        height: 48px;
     }
 
     #sidebar-toggle {
-        transform: rotate(0deg);
         transition: transform 0.3s ease;
     }
 
     #sidebar.collapsed #sidebar-toggle {
         transform: rotate(180deg);
+    }
+
+    /* Compact cards on mobile */
+    .sidebar-card {
+        padding: 10px 12px;
+        border-radius: 10px;
+    }
+
+    .sidebar-card h3 {
+        font-size: 16px;
+        margin-bottom: 5px;
+    }
+
+    .sidebar-card .badges {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-bottom: 5px;
+    }
+
+    .sidebar-card .badge-item {
+        font-size: 13px;
+        padding: 3px 9px;
+    }
+
+    .sidebar-card .rent-block {
+        font-size: 15px !important;
+        margin-bottom: 8px;
+        line-height: 1.6;
+    }
+
+    .sidebar-card .evt-desc {
+        font-size: 14px !important;
+        margin-bottom: 6px;
+    }
+
+    .sidebar-card .cta {
+        font-size: 13px;
+        padding: 7px 14px;
+    }
+
+    #sidebar-list {
+        padding: 8px 10px;
+        gap: 8px;
     }
 }
 
