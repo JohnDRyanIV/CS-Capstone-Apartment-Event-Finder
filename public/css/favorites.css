@@ -1,0 +1,78 @@
+/* ══════════════════════════════════════════════════════════════════════════════
+   favorites.css — styles specific to the favorites page
+   Requires: global.css
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+h1 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 4px;
+}
+
+/* ── Favorite card ─────────────────────────────────────────────────────────── */
+.fav-card {
+    background: #fff;
+    border: 1px solid #e2e0db;
+    border-radius: 14px;
+    padding: 18px 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: box-shadow 0.15s, border-color 0.15s;
+    height: 100%;
+}
+
+.fav-card:hover {
+    box-shadow: 0 3px 12px rgba(0,0,0,0.10);
+    border-color: #c8c4be;
+}
+
+.fav-card h3 {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--ink);
+}
+
+.fav-card .rent-block {
+    font-size: 13px;
+    color: #555;
+}
+
+.fav-card .rent-block ul {
+    margin: 4px 0 0 16px;
+    padding: 0;
+}
+
+.fav-card .rent-block li { margin-bottom: 2px; }
+
+.fav-card .cta {
+    font-size: 13px;
+    padding: 7px 16px;
+}
+
+/* ── Remove button ─────────────────────────────────────────────────────────── */
+.remove-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #999;
+    cursor: pointer;
+    font-family: var(--font-serif);
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.remove-btn:hover { color: var(--red); border-color: var(--red); }
+
+/* ── Loading state ─────────────────────────────────────────────────────────── */
+#loading {
+    text-align: center;
+    color: #aaa;
+    padding: 60px 0;
+    font-size: 15px;
+}

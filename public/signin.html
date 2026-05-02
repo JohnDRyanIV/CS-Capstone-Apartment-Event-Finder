@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    {% include "bootstrap.html" %}
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400&family=Source+Serif+4:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="/public/css/global.css" rel="stylesheet">
+    <link href="/public/css/signin.css" rel="stylesheet">
+</head>
+<body>
+    <header>{% include "navbar.html" %}</header>
+
+    <div class="page-wrap">
+        <div class="auth-container">
+
+            <div class="auth-header">
+                <h1>Welcome back</h1>
+                <p>Find your next apartment or event in Des Moines</p>
+            </div>
+
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Sign In</button>
+                <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Register</button>
+            </div>
+
+            <div class="auth-card">
+
+                <!-- ── Login panel ── -->
+                <div class="form-panel active" id="panel-login">
+                    <div id="login-banner" class="feedback-banner"></div>
+                    <form id="loginForm" novalidate>
+                        <div class="field">
+                            <label for="loginUsername">Username</label>
+                            <input type="text" id="loginUsername" name="username" autocomplete="username" required />
+                            <div class="invalid-feedback">Username must be alphanumeric and at most 20 characters.</div>
+                        </div>
+                        <div class="field">
+                            <label for="loginPassword">Password</label>
+                            <input type="password" id="loginPassword" name="password" autocomplete="current-password" required />
+                            <div class="invalid-feedback">Password must be at least 8 characters.</div>
+                        </div>
+                        <button type="submit" class="btn-submit">Sign In</button>
+                    </form>
+                    <div class="divider">Don't have an account? <a href="#" onclick="switchTab('register');return false;">Register</a></div>
+                </div>
+
+                <!-- ── Register panel ── -->
+                <div class="form-panel" id="panel-register">
+                    <div id="register-banner" class="feedback-banner"></div>
+                    <form id="registerForm" novalidate>
+                        <div class="field">
+                            <label for="registerUsername">Username</label>
+                            <input type="text" id="registerUsername" name="username" autocomplete="username" required pattern="^[a-zA-Z0-9]{1,20}$" />
+                            <div class="invalid-feedback">Username must be alphanumeric and at most 20 characters.</div>
+                        </div>
+                        <div class="field">
+                            <label for="registerDisplayName">Display Name</label>
+                            <input type="text" id="registerDisplayName" name="displayName" autocomplete="nickname" required />
+                            <div class="invalid-feedback">Display name cannot be empty.</div>
+                        </div>
+                        <div class="field">
+                            <label for="registerPassword">Password</label>
+                            <input type="password" id="registerPassword" name="password" autocomplete="new-password" required pattern="^[\x21-\x7E]{8,}$" />
+                            <div class="invalid-feedback">Password must be at least 8 characters with no spaces.</div>
+                        </div>
+                        <button type="submit" class="btn-submit">Create Account</button>
+                    </form>
+                    <div class="divider">Already have an account? <a href="#" onclick="switchTab('login');return false;">Sign in</a></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/public/js/signin.js"></script>
+    <script>
+        function switchTab(tab) {
+            document.getElementById("panel-login").classList.toggle("active", tab === "login");
+            document.getElementById("panel-register").classList.toggle("active", tab === "register");
+            document.getElementById("tab-login").classList.toggle("active", tab === "login");
+            document.getElementById("tab-register").classList.toggle("active", tab === "register");
+        }
+
+        // Override signin.js callbacks to use inline banners instead of alert()
+        function showBanner(id, message, type) {
+            const banner = document.getElementById(id);
+            banner.textContent = message;
+            banner.className = `feedback-banner ${type}`;
+        }
+
+        // Patch registerCallback
+        window.registerCallback = async function(response) {
+            const result = await response.json();
+            if (!response.ok) {
+                showBanner("register-banner", result.message || "Registration failed.", "error");
+                return;
+            }
+            showBanner("register-banner", `Welcome, ${result.displayName}! You can now sign in.`, "success");
+            document.getElementById("registerForm").reset();
+        };
+
+        // Patch loginCallback
+        window.loginCallback = function(response) {
+            if (!response.ok) {
+                response.json().then(data => {
+                    showBanner("login-banner", data.message || "Login failed.", "error");
+                });
+                return;
+            }
+            response.json().then(() => {
+                window.location.href = "/map";
+            });
+        };
+    </script>
+</body>
+</html>

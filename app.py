@@ -1,6 +1,6 @@
 from flask import (
-    Flask, render_template, make_response, jsonify, Response, 
-    abort
+    Flask, render_template, make_response, 
+    jsonify, Response, redirect, abort
 )
 from flask_restful import Api, request, Resource
 from flask_bcrypt import Bcrypt
@@ -13,8 +13,7 @@ import pyodbc
 import os
 import hmac
 import hashlib
-
-
+import time
 
 
 # Constants
@@ -82,10 +81,20 @@ def require_login(fn):
         return fn(*args, **kwargs)
     return wrapper
 
-# Database connection setup
-def get_db_connection():
-    connection = pyodbc.connect(CONNECTION_STRING)
-    return connection
+def get_db_connection(retries=3, delay=2):
+    """
+    Azure database has auto-pause, so this retries accessing it in case
+    current access attempt occurs when database is paused.
+    """
+    for attempt in range(retries):
+        try:
+            return pyodbc.connect(CONNECTION_STRING)
+        except pyodbc.Error as e:
+            if "40613" in str(e) and attempt < retries - 1:
+                # Database is waking up, wait and retry
+                time.sleep(delay)
+            else:
+                raise
 
 def sign_session_cookie(session_id: str) -> str:
     """Sign the session ID with the app secret"""
@@ -261,6 +270,156 @@ class Login(Resource):
             )
 
             return response
+        
+@addResource("/logout")
+class Logout(Resource):
+    def post(self):
+        # Get the session cookie from the request.
+        # Note that cookies are sent automatically, so we don't have to change anything in the javascript code.
+        session_cookie = request.cookies.get("sessionID")
+        # If the sessionID doesn't exist in the header, then that means the cookie isn't set.
+        # In that case, we should inform the user that they aren't logged in.
+        if not session_cookie:
+            return {"message": "Not logged in"}, 400
+        # If it is set, then verify the session cookie signature. This will ensure that the
+        # cookie they sent matches a cookie we sent them, and will resolve to the session id portion.
+        session_id = verify_session_cookie_signature(session_cookie)
+        # the verify_session_cookie_signature method returns None if verification wasn't successful.
+        if session_id is None:
+            return {"message": "Invalid session"}, 400
+
+
+        # Now, we delete the session from the database.
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            if session_id is not None:
+                delete_session(session_id, cursor)
+            cursor.commit()
+            cursor.close()
+
+        response = make_response({"message": "Successfully logged out."}, 200)
+        # Delete the cookie. Easiest way to do this is to set an empty cookie, and set the expiry
+        # to some point in the past.
+        response.set_cookie("sessionID", value="", expires=0, samesite="Strict")
+        return response
+    
+@addResource("/auth")
+class AuthEndpoint(Resource):
+    def get(self):
+        user = get_user_from_session(request.cookies.get("sessionID"))
+        if user is None:
+            return {"message": "Not authenticated"}, 401
+        elif user == "expired":
+            response = make_response({"message": "Session expired. Please log in again."}, 401)
+            response.delete_cookie("sessionID")
+            return response
+
+        return make_response(
+            render_template("auth.html", name=user.display_name, show_logout_button=True)
+        )
+    
+@addResource("/api/favorites")
+class Favorites(Resource):
+    def get(self):
+        """Get all favorites for the current user"""
+        user = get_user_from_session(request.cookies.get("sessionID"))
+        if user is None:
+            return {"message": "Not authenticated"}, 401
+        elif user == "expired":
+            return {"message": "Session expired. Please log in again."}, 401
+
+        session_id = verify_session_cookie_signature(request.cookies.get("sessionID"))
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            rows = cursor.execute(
+                """SELECT item_id, item_type, created_at
+                   FROM Favorites
+                   WHERE userid = (SELECT userid FROM Sessions WHERE sessionid = ?)""",
+                (session_id,)
+            ).fetchall()
+            cursor.close()
+
+        favorites = [
+            {"item_id": row.item_id, "item_type": row.item_type, "created_at": row.created_at.isoformat()}
+            for row in rows
+        ]
+        return {"favorites": favorites}, 200
+
+    def post(self):
+        """Add a favorite for the current user"""
+        user = get_user_from_session(request.cookies.get("sessionID"))
+        if user is None:
+            return {"message": "Not authenticated"}, 401
+        elif user == "expired":
+            return {"message": "Session expired. Please log in again."}, 401
+
+        data = request.get_json()
+        item_id   = data.get("item_id")
+        item_type = data.get("item_type")
+
+        if not item_id or not item_type:
+            return {"message": "Missing item_id or item_type"}, 400
+        if item_type not in ("apartment", "event"):
+            return {"message": "item_type must be 'apartment' or 'event'"}, 400
+
+        session_id = verify_session_cookie_signature(request.cookies.get("sessionID"))
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            try:
+                cursor.execute(
+                    """INSERT INTO Favorites (userid, item_id, item_type, created_at)
+                       VALUES (
+                           (SELECT userid FROM Sessions WHERE sessionid = ?),
+                           ?, ?, ?
+                       )""",
+                    (session_id, item_id, item_type, datetime.now())
+                )
+                cursor.commit()
+            except pyodbc.Error as e:
+                # Unique constraint violation — already favorited
+                if "UQ_Favorite" in str(e) or "2627" in str(e) or "2601" in str(e):
+                    return {"message": "Already in favorites"}, 409
+                return {"message": "An error occurred"}, 500
+            finally:
+                cursor.close()
+
+        return {"message": "Added to favorites"}, 201
+
+    def delete(self):
+        """Remove a favorite for the current user"""
+        user = get_user_from_session(request.cookies.get("sessionID"))
+        if user is None:
+            return {"message": "Not authenticated"}, 401
+        elif user == "expired":
+            return {"message": "Session expired. Please log in again."}, 401
+
+        data = request.get_json()
+        item_id   = data.get("item_id")
+        item_type = data.get("item_type")
+
+        if not item_id or not item_type:
+            return {"message": "Missing item_id or item_type"}, 400
+
+        session_id = verify_session_cookie_signature(request.cookies.get("sessionID"))
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            try:
+                cursor.execute(
+                    """DELETE FROM Favorites
+                       WHERE userid = (SELECT userid FROM Sessions WHERE sessionid = ?)
+                       AND item_id = ? AND item_type = ?""",
+                    (session_id, item_id, item_type)
+                )
+                cursor.commit()
+            except pyodbc.Error:
+                return {"message": "An error occurred"}, 500
+            finally:
+                cursor.close()
+
+        return {"message": "Removed from favorites"}, 200
 
 def update_login_time(cursor, username):
     try:
@@ -324,10 +483,17 @@ def get_user_from_session(cookie):
         cursor.close()
     return user
 
+def get_template_context():
+    """Returns common template variables for every page."""
+    user = get_user_from_session(request.cookies.get("sessionID"))
+    is_logged_in = user is not None and user != "expired"
+    return {"is_logged_in": is_logged_in}
+
+
 # The "@app.route" decorator is sugar for calling app.add_url_rule
 @app.route("/")
 def index():
-    return render_template("index.html", name="Index")
+    return render_template("index.html", **get_template_context())
 
 @app.route("/data/apartments")
 def apartments():
@@ -347,49 +513,20 @@ def events():
 
 @app.route("/map")
 def map_page():
-    mapbox_token = os.getenv("MAPBOX_TOKEN")
-    return render_template("maps.html", mapbox_token=mapbox_token)
+    ctx = get_template_context()
+    return render_template("maps.html", mapbox_token=MAPBOX_TOKEN, **ctx)
 
-@app.route("/test")
-def test():
-    return render_template("test.html")
+@app.route("/signin")
+def signin_form():
+    return render_template("signin.html", **get_template_context())
 
-@app.route("/signup")
-def signup_form():
-    # TODO TODO - CREATE SIGNUP PAGE
-    return render_template("signup.html", name="Sign Up")
-    
-@addResource("/logout")
-class Logout(Resource):
-    def post(self):
-        # Get the session cookie from the request.
-        # Note that cookies are sent automatically, so we don't have to change anything in the javascript code.
-        session_cookie = request.cookies.get("sessionID")
-        # If the sessionID doesn't exist in the header, then that means the cookie isn't set.
-        # In that case, we should inform the user that they aren't logged in.
-        if not session_cookie:
-            return {"message": "Not logged in"}, 400
-        # If it is set, then verify the session cookie signature. This will ensure that the
-        # cookie they sent matches a cookie we sent them, and will resolve to the session id portion.
-        session_id = verify_session_cookie_signature(session_cookie)
-        # the verify_session_cookie_signature method returns None if verification wasn't successful.
-        if session_id is None:
-            return {"message": "Invalid session"}, 400
+@app.route("/favorites")
+def favorites_page():
+    user = get_user_from_session(request.cookies.get("sessionID"))
+    if user is None or user == "expired":
+        return redirect("/signin")
+    return render_template("favorites.html", **get_template_context())
 
-
-        # Now, we delete the session from the database.
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            if session_id is not None:
-                delete_session(session_id, cursor)
-            cursor.commit()
-            cursor.close()
-
-        response = make_response({"message": "Successfully logged out."}, 200)
-        # Delete the cookie. Easiest way to do this is to set an empty cookie, and set the expiry
-        # to some point in the past.
-        response.set_cookie("sessionID", value="", expires=0, samesite="Strict")
-        return response
 
 if __name__ == "__main__":
     app.run(debug=True)

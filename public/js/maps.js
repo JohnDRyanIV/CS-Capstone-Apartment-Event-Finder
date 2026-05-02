@@ -129,6 +129,66 @@ function openPopup(popup) {
     popup.addTo(map);
 }
 
+// ── Favorites ──────────────────────────────────────────────────────────────────
+const isLoggedIn = window.IS_LOGGED_IN || false;
+let favoritedIds = new Set(); // "type:id" strings e.g. "apartment:r4nym93"
+
+function favKey(itemType, itemId) {
+    return `${itemType}:${itemId}`;
+}
+
+async function fetchFavorites() {
+    if (!isLoggedIn) return;
+    try {
+        const res = await fetch("/api/favorites", { credentials: "include" });
+        if (!res.ok) return;
+        const data = await res.json();
+        favoritedIds = new Set(data.favorites.map(f => favKey(f.item_type, f.item_id)));
+    } catch (e) {
+        console.error("Failed to fetch favorites", e);
+    }
+}
+
+async function toggleFavorite(itemId, itemType) {
+    const key = favKey(itemType, itemId);
+    const isFav = favoritedIds.has(key);
+    try {
+        const res = await fetch("/api/favorites", {
+            method: isFav ? "DELETE" : "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ item_id: String(itemId), item_type: itemType }),
+            credentials: "include"
+        });
+        if (!res.ok) return;
+        isFav ? favoritedIds.delete(key) : favoritedIds.add(key);
+        // Update every button for this item across sidebar + popup
+        document.querySelectorAll(`.favorite-btn[data-item-id="${itemId}"][data-item-type="${itemType}"]`).forEach(btn => {
+            const nowFav = favoritedIds.has(key);
+            btn.textContent = nowFav ? "♥" : "♡";
+            btn.classList.toggle("favorited", nowFav);
+            btn.title = nowFav ? "Remove from favorites" : "Add to favorites";
+        });
+    } catch (e) {
+        console.error("Failed to toggle favorite", e);
+    }
+}
+
+function buildFavBtnHTML(itemId, itemType) {
+    if (!isLoggedIn || !itemId) return "";
+    const isFav = favoritedIds.has(favKey(itemType, itemId));
+    return `<button class="favorite-btn${isFav ? " favorited" : ""}" data-item-id="${escapeHtml(String(itemId))}" data-item-type="${itemType}" title="${isFav ? "Remove from favorites" : "Add to favorites"}">${isFav ? "♥" : "♡"}</button>`;
+}
+
+// Event delegation — handles favorite buttons anywhere in the document
+document.addEventListener("click", async e => {
+    const btn = e.target.closest(".favorite-btn");
+    if (!btn) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    btn.blur(); // release focus before Mapbox can complain
+    await toggleFavorite(btn.dataset.itemId, btn.dataset.itemType);
+}, true); // capture phase so we intercept before Mapbox
+
 // ── Sidebar ────────────────────────────────────────────────────────────────────
 const sidebarList  = document.getElementById("sidebar-list");
 const sidebarTitle = document.getElementById("sidebar-title");
@@ -173,11 +233,14 @@ function buildAptSidebarCard(apt) {
 
     const cta = link ? `<a class="cta" href="${escapeHtml(link)}" target="_blank">View on Apartments.com</a>` : "";
 
+    const favBtn = buildFavBtnHTML(apt.listing_id, "apartment");
+    const footer = `<div class="card-footer-row">${cta}${favBtn}</div>`;
+
     const card = document.createElement("div");
     card.className = "sidebar-card";
     card.dataset.lat = apt.lat;
     card.dataset.lon = apt.lon;
-    card.innerHTML = `<h3>${escapeHtml(title)}</h3>${badges}${rentBlock}${cta}`;
+    card.innerHTML = `<h3>${escapeHtml(title)}</h3>${badges}${rentBlock}${footer}`;
     return card;
 }
 
@@ -199,11 +262,14 @@ function buildEventSidebarCard(ev) {
 
     const cta = link ? `<a class="cta" href="${escapeHtml(link)}" target="_blank">View on Catch Des Moines</a>` : "";
 
+    const favBtn = buildFavBtnHTML(ev.id, "event");
+    const footer = `<div class="card-footer-row">${cta}${favBtn}</div>`;
+
     const card = document.createElement("div");
     card.className = "sidebar-card";
     card.dataset.lat = ev.latitude;
     card.dataset.lon = ev.longitude;
-    card.innerHTML = `<h3>${escapeHtml(title)}</h3>${badges}${descBlock}${cta}`;
+    card.innerHTML = `<h3>${escapeHtml(title)}</h3>${badges}${descBlock}${footer}`;
     return card;
 }
 
@@ -227,7 +293,8 @@ function populateSidebarApartments(apartments, maxPrice) {
 
     filtered.forEach(apt => {
         const card = buildAptSidebarCard(apt);
-        card.addEventListener("click", () => {
+        card.addEventListener("click", (e) => {
+            if (e.target.closest(".favorite-btn")) return;
             document.querySelectorAll(".sidebar-card").forEach(c => c.classList.remove("active"));
             card.classList.add("active");
             map.flyTo({ center: [apt.lon, apt.lat], zoom: 15, duration: 600 });
@@ -254,7 +321,8 @@ function populateSidebarEvents(events) {
 
     filtered.forEach(ev => {
         const card = buildEventSidebarCard(ev);
-        card.addEventListener("click", () => {
+        card.addEventListener("click", (e) => {
+            if (e.target.closest(".favorite-btn")) return;
             document.querySelectorAll(".sidebar-card").forEach(c => c.classList.remove("active"));
             card.classList.add("active");
             map.flyTo({ center: [ev.longitude, ev.latitude], zoom: 15, duration: 600 });
@@ -292,8 +360,10 @@ function buildAptPopupHTML(apt) {
     }
 
     const cta = link ? `<a class="cta" href="${escapeHtml(link)}" target="_blank">View on Apartments.com</a>` : "";
+    const favBtn = buildFavBtnHTML(apt.listing_id, "apartment");
+    const footer = `<div class="card-footer-row">${cta}${favBtn}</div>`;
 
-    return `<div class="apt-popup"><h3>${escapeHtml(title)}</h3>${badges}${rentBlock}${cta}</div>`;
+    return `<div class="apt-popup"><h3>${escapeHtml(title)}</h3>${badges}${rentBlock}${footer}</div>`;
 }
 
 function buildEventCardHTML(event) {
@@ -313,8 +383,10 @@ function buildEventCardHTML(event) {
         : "";
 
     const cta = link ? `<a class="cta" href="${escapeHtml(link)}" target="_blank">View on Catch Des Moines</a>` : "";
+    const favBtn = buildFavBtnHTML(event.id, "event");
+    const footer = `<div class="card-footer-row">${cta}${favBtn}</div>`;
 
-    return `<div class="apt-popup"><h3>${escapeHtml(title)}</h3>${badges}${descBlock}${cta}</div>`;
+    return `<div class="apt-popup"><h3>${escapeHtml(title)}</h3>${badges}${descBlock}${footer}</div>`;
 }
 
 // ── GeoJSON builders ───────────────────────────────────────────────────────────
@@ -331,7 +403,7 @@ function buildApartmentGeoJSON(apartments, maxPrice) {
                 type: "Feature",
                 geometry: { type: "Point", coordinates: [apt.lon, apt.lat] },
                 properties: {
-                    popupHTML: buildAptPopupHTML(apt),
+                    apt_id: apt.listing_id || null,
                     title: apt.title || apt.address || "Apartment"
                 }
             }))
@@ -509,16 +581,22 @@ map.on("load", () => {
         priceValueMobile.addEventListener("change",  () => syncPrice(Math.max(500, Math.min(4000, Number(priceValueMobile.value)))));
 
         // ── Apartments layer ─────────────────────────────────────────────────
+        // Build lookup so map pin clicks can generate fresh popups with correct fav state
+        const aptById = {};
+        apartments.forEach(apt => { if (apt.listing_id) aptById[apt.listing_id] = apt; });
+
         addClusteredLayer("apartments", buildApartmentGeoJSON(apartments, 4000), "#3B82F6", "#2563EB", "#1E3A8A");
         populateSidebarApartments(apartments, 4000);
 
         map.on("click", "apartments-unclustered-point", e => {
             const coords = e.features[0].geometry.coordinates.slice();
-            const { popupHTML } = e.features[0].properties;
+            const aptId = e.features[0].properties.apt_id;
+            const apt = aptId && aptById[aptId];
             while (Math.abs(e.lngLat.lng - coords[0]) > 180)
                 coords[0] += e.lngLat.lng > coords[0] ? 360 : -360;
             openPopup(new mapboxgl.Popup({ offset: 12, maxWidth: "320px" })
-                .setLngLat(coords).setHTML(popupHTML));
+                .setLngLat(coords)
+                .setHTML(apt ? buildAptPopupHTML(apt) : "<div class='apt-popup'><h3>Apartment</h3></div>"));
         });
 
         // ── Event categories ─────────────────────────────────────────────────
@@ -608,7 +686,8 @@ map.on("load", () => {
             });
         });
 
-        updateVisibleLayer("apartments");
+        // Fetch favorites then rebuild cards so heart state is correct from the start
+        fetchFavorites().then(() => updateVisibleLayer("apartments"));
 
         // Rebuild cards when crossing mobile/desktop breakpoint
         window.addEventListener("breakpointchange", () => {
