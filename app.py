@@ -46,7 +46,14 @@ app = Flask(
 )
 
 flask_bcrypt = Bcrypt(app)
-api          = Api(app)
+
+_api_errors = {
+    'DatabaseWakingUpError': {
+        'message': 'Database is waking up. Try again soon.',
+        'status': 503
+    }
+}
+api = Api(app, errors=_api_errors)
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
