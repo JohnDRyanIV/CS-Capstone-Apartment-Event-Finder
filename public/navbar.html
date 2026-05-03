@@ -34,11 +34,14 @@
     // Logout
     const logoutButton = document.getElementById("logoutButton");
     if (logoutButton) {
-        logoutButton.addEventListener("click", () => {
-            fetch("/logout", { method: "POST", credentials: "include" })
-                .then(res => res.json())
-                .then(() => window.location.href = "/")
-                .catch(() => alert("Logout failed."));
+        logoutButton.addEventListener("click", async () => {
+            try {
+                const res = await fetch("/logout", { method: "POST", credentials: "include" });
+                if (handle503(res)) return;
+                window.location.href = "/";
+            } catch (e) {
+                alert("Logout failed.");
+            }
         });
     }
 </script>

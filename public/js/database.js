@@ -3,7 +3,7 @@
 
 function handle503(response) {
     if (response.status !== 503) return false;
-    showDbToast("⏳ Database is waking up — please try again in a few seconds.");
+    alert("The database is currently waking up. This can take up to a minute. Please try again in a few seconds.");
     return true;
 }
 
