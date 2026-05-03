@@ -83,7 +83,7 @@ class DatabaseWakingUpError(Exception):
 
 _db_executor = ThreadPoolExecutor(max_workers=10)
 
-def get_db_connection(timeout=8):
+def get_db_connection(timeout=3):
     """Connect to the database in a thread pool so Flask's main thread is never blocked
     (or else it hangs the entire application until ODBC finishes, ANNOYING! >:( ))."""
     future = _db_executor.submit(pyodbc.connect, CONNECTION_STRING)

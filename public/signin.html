@@ -89,24 +89,15 @@
             document.getElementById("tab-register").classList.toggle("active", tab === "register");
         }
 
-        // Override signin.js callbacks to use inline banners instead of alert()
-        function showBanner(id, message, type) {
-            const banner = document.getElementById(id);
-            banner.textContent = message;
-            banner.className = `feedback-banner ${type}`;
-        }
-
         function setLoading(btnId, spinnerId, textId, loading) {
-            const btn    = document.getElementById(btnId);
+            const btn     = document.getElementById(btnId);
             const spinner = document.getElementById(spinnerId);
-            const text   = document.getElementById(textId);
-            btn.disabled         = loading;
+            const text    = document.getElementById(textId);
+            btn.disabled          = loading;
             spinner.style.display = loading ? "inline-block" : "none";
-            text.style.opacity   = loading ? "0.5" : "1";
+            text.style.opacity    = loading ? "0.5" : "1";
         }
 
-        // Patch validateLoginForm to show spinner
-        const _origLoginSubmit = document.getElementById("loginForm").onsubmit;
         document.getElementById("loginForm").addEventListener("submit", () => {
             setLoading("loginSubmit", "loginSpinner", "loginBtnText", true);
         });
@@ -114,40 +105,6 @@
         document.getElementById("registerForm").addEventListener("submit", () => {
             setLoading("registerSubmit", "registerSpinner", "registerBtnText", true);
         });
-
-        // Patch registerCallback
-        window.registerCallback = async function(response) {
-            setLoading("registerSubmit", "registerSpinner", "registerBtnText", false);
-            if (handle503(response)) {
-                showBanner("register-banner", "⏳ Database is waking up — please try again in a few seconds.", "error");
-                return;
-            }
-            const result = await response.json();
-            if (!response.ok) {
-                showBanner("register-banner", result.message || "Registration failed.", "error");
-                return;
-            }
-            showBanner("register-banner", `Welcome, ${result.displayName}! You can now sign in.`, "success");
-            document.getElementById("registerForm").reset();
-        };
-
-        // Patch loginCallback
-        window.loginCallback = function(response) {
-            setLoading("loginSubmit", "loginSpinner", "loginBtnText", false);
-            if (handle503(response)) {
-                showBanner("login-banner", "⏳ Database is waking up — please try again in a few seconds.", "error");
-                return;
-            }
-            if (!response.ok) {
-                response.json().then(data => {
-                    showBanner("login-banner", data.message || "Login failed.", "error");
-                });
-                return;
-            }
-            response.json().then(() => {
-                window.location.href = "/map";
-            });
-        };
     </script>
 </body>
 </html>
