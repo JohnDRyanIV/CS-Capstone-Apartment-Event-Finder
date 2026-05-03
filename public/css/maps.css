@@ -74,7 +74,7 @@ body {
         bottom: 0;
         left: 0;
         right: 0;
-        height: 45vh;
+        height: 32vh;
         border-top: 1px solid var(--border);
         border-radius: 14px 14px 0 0;
         box-shadow: 0 -4px 16px rgba(0,0,0,0.12);
@@ -98,8 +98,64 @@ body {
 }
 
 @media (min-width: 768px) {
-    #sidebar        { width: 340px; height: 100%; border-left: 1px solid var(--border); }
-    #sidebar-toggle { display: none; }
+    #sidebar {
+        width: 340px;
+        height: 100%;
+        border-left: 1px solid var(--border);
+        transition: width 0.3s ease;
+    }
+
+    #sidebar.collapsed {
+        width: 48px;
+    }
+
+    #sidebar.collapsed #sidebar-list,
+    #sidebar.collapsed #sidebar-count {
+        display: none;
+    }
+
+    #sidebar.collapsed #sidebar-header h2 {
+        display: none;
+    }
+
+    #sidebar.collapsed #sidebar-header {
+        justify-content: center;
+        padding: 12px 0;
+    }
+
+    #sidebar-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--cream);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        cursor: pointer;
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+        font-size: 0;
+        transition: background 0.15s, border-color 0.15s;
+    }
+
+    #sidebar-toggle:hover {
+        background: var(--blue-light);
+        border-color: var(--blue);
+    }
+
+    #sidebar-toggle::after {
+        content: "›";
+        font-size: 18px;
+        font-family: var(--font-serif);
+        color: var(--muted);
+        display: inline-block;
+    }
+
+    #sidebar-toggle:hover::after { color: var(--blue); }
+
+    #sidebar.collapsed #sidebar-toggle::after {
+        content: "‹";
+    }
 }
 
 #sidebar-header {
@@ -263,8 +319,8 @@ body {
 
 /* ── Event carousel ────────────────────────────────────────────────────────── */
 .popup-carousel {
-    min-width: 240px;
-    max-width: 300px;
+    min-width: 280px;
+    max-width: 360px;
 }
 
 .carousel-nav {
@@ -294,4 +350,39 @@ body {
 .carousel-counter {
     font-size: 12px;
     color: #6b7280;
+}
+
+/* ── Layer toggle buttons ──────────────────────────────────────────────────── */
+.layer-toggle {
+    display: flex;
+    gap: 6px;
+}
+
+.layer-toggle.vertical {
+    flex-direction: column;
+}
+
+.layer-btn {
+    font-family: var(--font-serif, 'Source Serif 4', Georgia, serif);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border: 1.5px solid var(--border, #e0ddd8);
+    border-radius: 8px;
+    background: var(--warm-white, #fdfcf9);
+    color: var(--muted, #888);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+
+.layer-btn:hover {
+    border-color: var(--blue, #2c5f9e);
+    color: var(--blue, #2c5f9e);
+}
+
+.layer-btn.active {
+    background: var(--blue, #2c5f9e);
+    border-color: var(--blue, #2c5f9e);
+    color: #fff;
 }

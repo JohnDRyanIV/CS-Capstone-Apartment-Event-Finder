@@ -165,7 +165,7 @@ async function toggleFavorite(itemId, itemType) {
         isFav ? favoritedIds.delete(key) : favoritedIds.add(key);
         document.querySelectorAll(`.favorite-btn[data-item-id="${itemId}"][data-item-type="${itemType}"]`).forEach(btn => {
             const nowFav = favoritedIds.has(key);
-            btn.textContent = nowFav ? "♥" : "♡";
+            btn.textContent = nowFav ? "♥ Saved" : "♡ Save";
             btn.classList.toggle("favorited", nowFav);
             btn.title = nowFav ? "Remove from favorites" : "Add to favorites";
         });
@@ -177,7 +177,8 @@ async function toggleFavorite(itemId, itemType) {
 function buildFavBtnHTML(itemId, itemType) {
     if (!isLoggedIn || !itemId) return "";
     const isFav = favoritedIds.has(favKey(itemType, itemId));
-    return `<button class="favorite-btn${isFav ? " favorited" : ""}" data-item-id="${escapeHtml(String(itemId))}" data-item-type="${itemType}" title="${isFav ? "Remove from favorites" : "Add to favorites"}">${isFav ? "♥" : "♡"}</button>`;
+    const label = isFav ? "♥ Saved" : "♡ Save";
+    return `<button class="favorite-btn${isFav ? " favorited" : ""}" data-item-id="${escapeHtml(String(itemId))}" data-item-type="${itemType}" title="${isFav ? "Remove from favorites" : "Add to favorites"}">${label}</button>`;
 }
 
 // Event delegation — handles favorite buttons anywhere in the document
@@ -199,7 +200,8 @@ const toggleBtn    = document.getElementById("sidebar-toggle");
 
 toggleBtn.addEventListener("click", () => {
     sidebar.classList.toggle("collapsed");
-    toggleBtn.textContent = sidebar.classList.contains("collapsed") ? "▲" : "▼";
+    // Let Mapbox know the canvas size changed
+    setTimeout(() => map.resize(), 320);
 });
 
 function buildAptSidebarCard(apt) {
@@ -232,7 +234,7 @@ function buildAptSidebarCard(apt) {
         rentBlock = `<div class="rent-block"><strong>Rent:</strong> N/A</div>`;
     }
 
-    const cta = link ? `<a class="cta" href="${escapeHtml(link)}" target="_blank">View on Apartments.com</a>` : "";
+    const cta = link ? `<a class="cta" href="${escapeHtml(link)}" target="_blank">View Apartment</a>` : "";
 
     const favBtn = buildFavBtnHTML(apt.listing_id, "apartment");
     const footer = `<div class="card-footer-row">${cta}${favBtn}</div>`;
@@ -261,7 +263,7 @@ function buildEventSidebarCard(ev) {
         ? `<p class="evt-desc">${escapeHtml(desc.length > 100 ? desc.slice(0, 100) + "…" : desc)}</p>`
         : "";
 
-    const cta = link ? `<a class="cta" href="${escapeHtml(link)}" target="_blank">View on Catch Des Moines</a>` : "";
+    const cta = link ? `<a class="cta" href="${escapeHtml(link)}" target="_blank">View Event</a>` : "";
 
     const favBtn = buildFavBtnHTML(ev.id, "event");
     const footer = `<div class="card-footer-row">${cta}${favBtn}</div>`;
@@ -360,7 +362,7 @@ function buildAptPopupHTML(apt) {
         rentBlock = `<div class="rent-block"><strong>Rent:</strong> N/A</div>`;
     }
 
-    const cta = link ? `<a class="cta" href="${escapeHtml(link)}" target="_blank">View on Apartments.com</a>` : "";
+    const cta = link ? `<a class="cta" href="${escapeHtml(link)}" target="_blank">View Apartment</a>` : "";
     const favBtn = buildFavBtnHTML(apt.listing_id, "apartment");
     const footer = `<div class="card-footer-row">${cta}${favBtn}</div>`;
 
@@ -383,11 +385,11 @@ function buildEventCardHTML(event) {
         ? `<p class="evt-desc">${escapeHtml(desc.length > 120 ? desc.slice(0, 120) + "…" : desc)}</p>`
         : "";
 
-    const cta = link ? `<a class="cta" href="${escapeHtml(link)}" target="_blank">View on Catch Des Moines</a>` : "";
+    const cta = link ? `<a class="cta" href="${escapeHtml(link)}" target="_blank">View Event</a>` : "";
     const favBtn = buildFavBtnHTML(event.id, "event");
     const footer = `<div class="card-footer-row">${cta}${favBtn}</div>`;
 
-    return `<div class="apt-popup"><h3>${escapeHtml(title)}</h3>${badges}${descBlock}${footer}</div>`;
+    return `<div><h3>${escapeHtml(title)}</h3>${badges}${descBlock}${footer}</div>`;
 }
 
 // ── GeoJSON builders ───────────────────────────────────────────────────────────
@@ -609,10 +611,15 @@ map.on("load", () => {
         function getActiveEventFilters() {
             const mobile = isMobile();
             return {
-                startDate: (mobile ? eventStartDateMob : eventStartDate).value || null,
-                endDate:   (mobile ? eventEndDateMob   : eventEndDate).value   || null,
+                startDate:  (mobile ? eventStartDateMob : eventStartDate).value || null,
+                endDate:    (mobile ? eventEndDateMob   : eventEndDate).value   || null,
                 categories: getSelectedEventCategories(mobile ? "eventCategoryFiltersMobile" : "eventCategoryFilters")
             };
+        }
+
+        function getActiveLayer() {
+            const active = document.querySelector(".layer-btn.active");
+            return active ? active.dataset.layer : "apartments";
         }
 
         function updateEventLayer() {
@@ -676,14 +683,14 @@ map.on("load", () => {
             }
         }
 
-        // Sync all radio buttons (desktop + mobile share the same `name="layer"`)
-        document.querySelectorAll('input[name="layer"]').forEach(radio => {
-            radio.addEventListener("change", e => {
-                // Keep all radios with same value in sync
-                document.querySelectorAll(`input[name="layer"]`).forEach(r => {
-                    r.checked = r.value === e.target.value;
+        // Layer toggle buttons
+        document.querySelectorAll(".layer-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const layer = btn.dataset.layer;
+                document.querySelectorAll(".layer-btn").forEach(b => {
+                    b.classList.toggle("active", b.dataset.layer === layer);
                 });
-                updateVisibleLayer(e.target.value);
+                updateVisibleLayer(layer);
             });
         });
 
@@ -692,7 +699,7 @@ map.on("load", () => {
 
         // Rebuild cards when crossing mobile/desktop breakpoint
         window.addEventListener("breakpointchange", () => {
-            const currentLayer = document.querySelector('input[name="layer"]:checked')?.value || "apartments";
+            const currentLayer = getActiveLayer();
             if (currentLayer === "apartments") {
                 populateSidebarApartments(apartments, Number(priceRange.value));
             } else {

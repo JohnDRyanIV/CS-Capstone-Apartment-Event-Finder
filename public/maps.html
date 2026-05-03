@@ -19,15 +19,9 @@
 <!-- ── Mobile topbar (hidden on md+) ──────────────────────────────────────── -->
 <div id="topbar" class="d-flex d-md-none align-items-center flex-wrap gap-2 px-3 py-2">
 
-    <div class="d-flex gap-3">
-        <div class="form-check form-check-inline mb-0">
-            <input class="form-check-input" type="radio" name="layer" id="mobileLayerApt" value="apartments" checked>
-            <label class="form-check-label" for="mobileLayerApt">🔵 Apartments</label>
-        </div>
-        <div class="form-check form-check-inline mb-0">
-            <input class="form-check-input" type="radio" name="layer" id="mobileLayerEvt" value="events">
-            <label class="form-check-label" for="mobileLayerEvt">🔴 Events</label>
-        </div>
+    <div class="layer-toggle">
+        <button class="layer-btn active" data-layer="apartments">🔵 Apartments</button>
+        <button class="layer-btn" data-layer="events">🔴 Events</button>
     </div>
 
     <!-- Apartment filters (mobile) -->
@@ -56,16 +50,9 @@
 
     <!-- Desktop floating controls (hidden on mobile) -->
     <div id="desktop-controls" class="d-none d-md-flex flex-column gap-2">
-        <strong>Show</strong>
-        <div class="d-flex flex-column gap-1">
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="layer" id="desktopLayerApt" value="apartments" checked>
-                <label class="form-check-label" for="desktopLayerApt">🔵 Apartments</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="layer" id="desktopLayerEvt" value="events">
-                <label class="form-check-label" for="desktopLayerEvt">🔴 Events</label>
-            </div>
+        <div class="layer-toggle vertical">
+            <button class="layer-btn active" data-layer="apartments">🔵 Apartments</button>
+            <button class="layer-btn" data-layer="events">🔴 Events</button>
         </div>
 
         <div id="apt-filters-desktop" class="d-flex flex-column gap-1 pt-2 border-top">
@@ -97,7 +84,7 @@
                 <h2 id="sidebar-title" class="mb-0">Apartments</h2>
                 <div id="sidebar-count" class="text-muted small"></div>
             </div>
-            <button id="sidebar-toggle" class="btn btn-sm btn-outline-secondary d-md-none" aria-label="Toggle sidebar">▼</button>
+            <button id="sidebar-toggle" aria-label="Toggle sidebar">▼</button>
         </div>
         <div id="sidebar-list"></div>
     </div>

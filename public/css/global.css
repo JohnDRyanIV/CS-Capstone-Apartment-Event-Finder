@@ -65,15 +65,32 @@ body {
 }
 
 .cta:hover { background: var(--blue-hover); }
-.cta::after { content: " →"; }
 
 /* ── Card footer row (cta + favorite btn) ──────────────────────────────────── */
 .card-footer-row {
     display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 10px;
+    flex-wrap: nowrap;
 }
+
+.card-footer-row .cta {
+    flex: 1;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-footer-row .favorite-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-color: #c8c4be;
+}
+
+.card-footer-row .cta::after { content: none; }
 
 /* ── Card header row (title + favorite btn) ────────────────────────────────── */
 .card-header-row {
@@ -91,19 +108,34 @@ body {
 
 /* ── Favorite button ───────────────────────────────────────────────────────── */
 .favorite-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     background: none;
-    border: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 22px;
-    line-height: 1;
-    color: #ccc;
-    padding: 0;
+    font-size: 13px;
+    font-family: var(--font-serif);
+    font-weight: 600;
+    color: var(--muted);
+    padding: 6px 12px;
     flex-shrink: 0;
-    transition: color 0.15s, transform 0.1s;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    white-space: nowrap;
 }
 
-.favorite-btn:hover   { color: var(--red); transform: scale(1.15); }
-.favorite-btn.favorited { color: var(--red); }
+.favorite-btn:hover {
+    color: var(--red);
+    border-color: var(--red);
+    background: #fdf0ee;
+}
+
+.favorite-btn.favorited {
+    color: var(--red);
+    border-color: var(--red);
+    background: #fdf0ee;
+}
 
 /* ── Section title (used on favorites page) ────────────────────────────────── */
 .section-title {
