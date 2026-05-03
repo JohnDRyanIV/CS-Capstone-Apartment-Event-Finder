@@ -141,6 +141,7 @@ async function fetchFavorites() {
     if (!isLoggedIn) return;
     try {
         const res = await fetch("/api/favorites", { credentials: "include" });
+        if (handle503(res)) return;
         if (!res.ok) return;
         const data = await res.json();
         favoritedIds = new Set(data.favorites.map(f => favKey(f.item_type, f.item_id)));
@@ -159,9 +160,9 @@ async function toggleFavorite(itemId, itemType) {
             body: JSON.stringify({ item_id: String(itemId), item_type: itemType }),
             credentials: "include"
         });
+        if (handle503(res)) return;
         if (!res.ok) return;
         isFav ? favoritedIds.delete(key) : favoritedIds.add(key);
-        // Update every button for this item across sidebar + popup
         document.querySelectorAll(`.favorite-btn[data-item-id="${itemId}"][data-item-type="${itemType}"]`).forEach(btn => {
             const nowFav = favoritedIds.has(key);
             btn.textContent = nowFav ? "♥" : "♡";

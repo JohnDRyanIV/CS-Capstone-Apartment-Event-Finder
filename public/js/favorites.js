@@ -26,6 +26,7 @@ async function removeFavorite(itemId, itemType, cardEl) {
             body: JSON.stringify({ item_id: String(itemId), item_type: itemType }),
             credentials: "include"
         });
+        if (handle503(res)) return;
         if (!res.ok) return;
         cardEl.closest(".col").remove();
         checkEmpty();
@@ -125,6 +126,11 @@ async function loadFavorites() {
         fetch("/data/apartments"),
         fetch("/data/events")
     ]);
+
+    if (handle503(favsRes)) {
+        document.getElementById("loading").textContent = "⏳ Database is waking up — please refresh in a few seconds.";
+        return;
+    }
 
     if (!favsRes.ok) {
         document.getElementById("loading").textContent = "Please log in to view your favorites.";

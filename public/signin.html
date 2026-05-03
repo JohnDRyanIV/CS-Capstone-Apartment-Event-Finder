@@ -40,7 +40,10 @@
                             <input type="password" id="loginPassword" name="password" autocomplete="current-password" required />
                             <div class="invalid-feedback">Password must be at least 8 characters.</div>
                         </div>
-                        <button type="submit" class="btn-submit">Sign In</button>
+                        <button type="submit" class="btn-submit" id="loginSubmit">
+                            <span id="loginSpinner" class="spinner" style="display:none"></span>
+                            <span id="loginBtnText">Sign In</span>
+                        </button>
                     </form>
                     <div class="divider">Don't have an account? <a href="#" onclick="switchTab('register');return false;">Register</a></div>
                 </div>
@@ -64,7 +67,10 @@
                             <input type="password" id="registerPassword" name="password" autocomplete="new-password" required pattern="^[\x21-\x7E]{8,}$" />
                             <div class="invalid-feedback">Password must be at least 8 characters with no spaces.</div>
                         </div>
-                        <button type="submit" class="btn-submit">Create Account</button>
+                        <button type="submit" class="btn-submit" id="registerSubmit">
+                            <span id="registerSpinner" class="spinner" style="display:none"></span>
+                            <span id="registerBtnText">Create Account</span>
+                        </button>
                     </form>
                     <div class="divider">Already have an account? <a href="#" onclick="switchTab('login');return false;">Sign in</a></div>
                 </div>
@@ -90,8 +96,32 @@
             banner.className = `feedback-banner ${type}`;
         }
 
+        function setLoading(btnId, spinnerId, textId, loading) {
+            const btn    = document.getElementById(btnId);
+            const spinner = document.getElementById(spinnerId);
+            const text   = document.getElementById(textId);
+            btn.disabled         = loading;
+            spinner.style.display = loading ? "inline-block" : "none";
+            text.style.opacity   = loading ? "0.5" : "1";
+        }
+
+        // Patch validateLoginForm to show spinner
+        const _origLoginSubmit = document.getElementById("loginForm").onsubmit;
+        document.getElementById("loginForm").addEventListener("submit", () => {
+            setLoading("loginSubmit", "loginSpinner", "loginBtnText", true);
+        });
+
+        document.getElementById("registerForm").addEventListener("submit", () => {
+            setLoading("registerSubmit", "registerSpinner", "registerBtnText", true);
+        });
+
         // Patch registerCallback
         window.registerCallback = async function(response) {
+            setLoading("registerSubmit", "registerSpinner", "registerBtnText", false);
+            if (handle503(response)) {
+                showBanner("register-banner", "⏳ Database is waking up — please try again in a few seconds.", "error");
+                return;
+            }
             const result = await response.json();
             if (!response.ok) {
                 showBanner("register-banner", result.message || "Registration failed.", "error");
@@ -103,6 +133,11 @@
 
         // Patch loginCallback
         window.loginCallback = function(response) {
+            setLoading("loginSubmit", "loginSpinner", "loginBtnText", false);
+            if (handle503(response)) {
+                showBanner("login-banner", "⏳ Database is waking up — please try again in a few seconds.", "error");
+                return;
+            }
             if (!response.ok) {
                 response.json().then(data => {
                     showBanner("login-banner", data.message || "Login failed.", "error");
