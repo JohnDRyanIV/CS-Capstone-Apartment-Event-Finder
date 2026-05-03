@@ -36,3 +36,15 @@ function showDbToast(message) {
     clearTimeout(toast._timeout);
     toast._timeout = setTimeout(() => { toast.style.opacity = "0"; }, 4000);
 }
+
+async function checkAuthStatus() {
+    try {
+        const res = await fetch("/api/auth", { credentials: "include" });
+        if (res.status === 401) {
+            // Cookie exists but session is invalid/expired — update UI
+            document.querySelectorAll(".requires-auth").forEach(el => el.style.display = "none");
+        }
+    } catch (e) {}
+}
+
+document.addEventListener("DOMContentLoaded", checkAuthStatus);

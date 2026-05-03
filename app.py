@@ -196,16 +196,9 @@ def get_user_from_session(cookie):
     return user
 
 def get_template_context():
-    """Returns is_logged_in for every template. Skips DB if no session cookie present."""
-    try:
-        cookie = request.cookies.get("sessionID")
-        if not cookie:
-            return {"is_logged_in": False}
-        user = get_user_from_session(cookie)
-        is_logged_in = user is not None and user != "expired"
-    except (DatabaseWakingUpError, pyodbc.Error):
-        is_logged_in = False
-    return {"is_logged_in": is_logged_in}
+    """Never hits the DB — frontend checks auth status asynchronously."""
+    cookie = request.cookies.get("sessionID")
+    return {"is_logged_in": bool(cookie)}
 
 
 # ── Resources ──────────────────────────────────────────────────────────────────
