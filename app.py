@@ -472,6 +472,24 @@ def favorites_page():
         return redirect("/signin")
     return render_template("favorites.html", **ctx)
 
+@app.route("/favicon.ico")
+def favicon():
+    blob = blob_service.get_blob_client(container="icons", blob="favicon.ico")
+    data = blob.download_blob().readall()
+    return Response(data, mimetype="image/x-icon")
+
+@app.route("/icons/<filename>")
+def icons(filename):
+    mimetypes = {
+        "png": "image/png",
+        "ico": "image/x-icon",
+        "webmanifest": "application/manifest+json"
+    }
+    ext = filename.rsplit(".", 1)[-1]
+    blob = blob_service.get_blob_client(container="icons", blob=filename)
+    data = blob.download_blob().readall()
+    return Response(data, mimetype=mimetypes.get(ext, "application/octet-stream"))
+
 
 if __name__ == "__main__":
     app.run(debug=True)

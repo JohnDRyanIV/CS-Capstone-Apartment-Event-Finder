@@ -2,7 +2,10 @@
 <script src="/public/js/database.js"></script>
 <nav id="site-nav">
     <div class="nav-inner">
-        <a class="nav-brand" href="/">Des Moines Finder</a>
+        <a class="nav-brand" href="/">
+            <img src="/icons/android-chrome-192x192.png" alt="Pocket Mover logo" style="width:28px;height:28px;border-radius:6px;margin-right:8px;vertical-align:middle;">
+            Pocket Mover
+        </a>
 
         <button class="nav-toggler" aria-label="Toggle navigation" onclick="this.closest('nav').classList.toggle('open')">
             <span></span><span></span><span></span>
@@ -34,14 +37,11 @@
     // Logout
     const logoutButton = document.getElementById("logoutButton");
     if (logoutButton) {
-        logoutButton.addEventListener("click", async () => {
-            try {
-                const res = await fetch("/logout", { method: "POST", credentials: "include" });
-                if (handle503(res)) return;
-                window.location.href = "/";
-            } catch (e) {
-                alert("Logout failed.");
-            }
+        logoutButton.addEventListener("click", () => {
+            fetch("/logout", { method: "POST", credentials: "include" })
+                .then(res => res.json())
+                .then(() => window.location.href = "/")
+                .catch(() => alert("Logout failed."));
         });
     }
 </script>
