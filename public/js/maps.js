@@ -40,23 +40,52 @@ function normalizeDateString(value) {
 }
 
 function eventMatchesDateRange(event, startDate, endDate) {
+<<<<<<< HEAD
+    const eventStartDate = normalizeDateString(event.event_start_date);
+
+    const eventEndDate = normalizeDateString(
+        event.recurrence_end_date || event.event_end_date || event.event_start_date
+    );
+
+    if (!eventStartDate && !eventEndDate) return true;
+
+    const rangeStart = eventStartDate || eventEndDate;
+    const rangeEnd = eventEndDate || eventStartDate;
+
+    if (startDate && rangeEnd < startDate) return false;
+    if (endDate && rangeStart > endDate) return false;
+=======
     const eventDate = normalizeDateString(event.event_date);
     if (!eventDate) return true;
     if (startDate && eventDate < startDate) return false;
     if (endDate && eventDate > endDate) return false;
+>>>>>>> origin/main
     return true;
 }
 
 function eventMatchesCategories(event, selectedCategories) {
     if (selectedCategories.length === 0) return true;
+<<<<<<< HEAD
+    const eventCategory = event.event_type;
+    if (!eventCategory) return false;
+
+    return selectedCategories.includes(eventCategory);
+=======
     const eventCategories = Array.isArray(event.categories) ? event.categories : [];
     return selectedCategories.some(cat => eventCategories.includes(cat));
+>>>>>>> origin/main
 }
 
 function collectEventCategories(events) {
     const categorySet = new Set();
     events.forEach(ev => {
+<<<<<<< HEAD
+        if (ev.event_type) {
+            categorySet.add(ev.event_type);
+        }
+=======
         if (Array.isArray(ev.categories)) ev.categories.forEach(c => { if (c) categorySet.add(c); });
+>>>>>>> origin/main
     });
     return Array.from(categorySet).sort((a, b) => a.localeCompare(b));
 }
@@ -248,6 +277,35 @@ function buildAptSidebarCard(apt) {
 }
 
 function buildEventSidebarCard(ev) {
+<<<<<<< HEAD
+    const title = ev.event_title || "Event";
+    const address = ev.address || "";
+    const startDate = formatEventDate(ev.event_start_date);
+    const endDate = formatEventDate(ev.event_end_date);
+
+    const dateStr = startDate && endDate && startDate !== endDate
+        ? `${startDate} - ${endDate}`
+        : startDate || endDate || ev.event_date || "";
+
+    const category = ev.event_type || "";
+    const desc = ev.description || "";
+    const link = ev.event_detail_url || null;
+
+    let recurrenceInfo = "";
+    if (ev.is_recurring) {
+        recurrenceInfo = ev.recurrence_description || "Recurring event";
+
+        const recurrenceEnd = normalizeDateString(ev.recurrence_end_date);
+        if (recurrenceEnd) {
+            recurrenceInfo += ` until ${recurrenceEnd}`;
+        }
+    }
+
+    let badges = `<div class="badges">`;
+    if (category) badges += `<span class="badge-item">${escapeHtml(category)}</span>`;
+    if (dateStr) badges += `<span class="badge-item">${calIcon} ${escapeHtml(dateStr)}</span>`;
+    if (recurrenceInfo) badges += `<span class="badge-item">${escapeHtml(recurrenceInfo)}</span>`;
+=======
     const title      = ev.event_title || "Event";
     const address    = ev.address     || "";
     const dateStr    = formatEventDate(ev.event_start_date) || ev.event_date || "";
@@ -256,6 +314,7 @@ function buildEventSidebarCard(ev) {
 
     let badges = `<div class="badges">`;
     if (dateStr) badges += `<span class="badge-item">${calIcon} ${escapeHtml(dateStr)}</span>`;
+>>>>>>> origin/main
     if (address) badges += `<span class="badge-item">${pinIcon} ${escapeHtml(address)}</span>`;
     badges += `</div>`;
 
@@ -370,6 +429,35 @@ function buildAptPopupHTML(apt) {
 }
 
 function buildEventCardHTML(event) {
+<<<<<<< HEAD
+    const title = event.event_title || "Event";
+    const address = event.address || "";
+    const startDate = formatEventDate(event.event_start_date);
+    const endDate = formatEventDate(event.event_end_date);
+
+    const dateStr = startDate && endDate && startDate !== endDate
+        ? `${startDate} - ${endDate}`
+        : startDate || endDate || event.event_date || "";
+
+    const category = event.event_type || "";
+    const desc = event.description || "";
+    const link = event.event_detail_url || null;
+
+    let recurrenceInfo = "";
+    if (event.is_recurring) {
+        recurrenceInfo = event.recurrence_description || "Recurring event";
+
+        const recurrenceEnd = normalizeDateString(event.recurrence_end_date);
+        if (recurrenceEnd) {
+            recurrenceInfo += ` until ${recurrenceEnd}`;
+        }
+    }
+
+    let badges = `<div class="badges">`;
+    if (category) badges += `<span class="badge-item">${escapeHtml(category)}</span>`;
+    if (dateStr) badges += `<span class="badge-item">${calIcon} ${escapeHtml(dateStr)}</span>`;
+    if (recurrenceInfo) badges += `<span class="badge-item">${escapeHtml(recurrenceInfo)}</span>`;
+=======
     const title   = event.event_title || "Event";
     const address = event.address     || "";
     const dateStr = formatEventDate(event.event_start_date) || event.event_date || "";
@@ -378,6 +466,7 @@ function buildEventCardHTML(event) {
 
     let badges = `<div class="badges">`;
     if (dateStr) badges += `<span class="badge-item">${calIcon} ${escapeHtml(dateStr)}</span>`;
+>>>>>>> origin/main
     if (address) badges += `<span class="badge-item">${pinIcon} ${escapeHtml(address)}</span>`;
     badges += `</div>`;
 
@@ -626,7 +715,10 @@ map.on("load", () => {
             const { startDate, endDate, categories } = getActiveEventFilters();
             const filteredEvents = events.filter(ev => {
                 if (ev.latitude == null || ev.longitude == null) return false;
+<<<<<<< HEAD
+=======
                 if (!isEventInFuture(ev)) return false;
+>>>>>>> origin/main
                 if (!eventMatchesDateRange(ev, startDate, endDate)) return false;
                 if (!eventMatchesCategories(ev, categories)) return false;
                 return true;
@@ -641,7 +733,11 @@ map.on("load", () => {
         document.getElementById("eventCategoryFilters").addEventListener("change", updateEventLayer);
         document.getElementById("eventCategoryFiltersMobile").addEventListener("change", updateEventLayer);
 
+<<<<<<< HEAD
+        const initialFilteredEvents = events.filter(ev => ev.latitude != null && ev.longitude != null);
+=======
         const initialFilteredEvents = events.filter(ev => ev.latitude != null && ev.longitude != null && isEventInFuture(ev));
+>>>>>>> origin/main
         eventGroups = groupByCoord(initialFilteredEvents);
         addClusteredLayer("events", buildEventGeoJSON(initialFilteredEvents), "#EF4444", "#DC2626", "#991B1B");
         setLayerGroupVisibility("events", false);
