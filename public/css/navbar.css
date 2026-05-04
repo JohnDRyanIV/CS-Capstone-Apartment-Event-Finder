@@ -1,0 +1,113 @@
+#site-nav {
+    background: var(--warm-white, #fdfcf9);
+    border-bottom: 1px solid var(--border, #e0ddd8);
+    font-family: var(--font-serif, 'Source Serif 4', Georgia, serif);
+    position: relative;
+    z-index: 100;
+}
+
+.nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    height: 56px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.nav-brand {
+    font-family: var(--font-display, 'Lora', Georgia, serif);
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--ink, #1a1a1a);
+    text-decoration: none;
+    letter-spacing: -0.3px;
+    flex-shrink: 0;
+}
+
+.nav-brand:hover { color: var(--blue, #2c5f9e); }
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.nav-link {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted, #888);
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    transition: color 0.15s, background 0.15s;
+}
+
+.nav-link:hover {
+    color: var(--ink, #1a1a1a);
+    background: var(--cream, #f7f6f3);
+}
+
+.nav-link.active { color: var(--blue, #2c5f9e); }
+
+.nav-logout {
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--font-serif, 'Source Serif 4', Georgia, serif);
+    color: var(--muted, #888);
+    background: none;
+    border: 1px solid var(--border, #e0ddd8);
+    border-radius: 8px;
+    padding: 5px 12px;
+    cursor: pointer;
+    margin-left: 8px;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.nav-logout:hover { color: var(--red, #c0392b); border-color: var(--red, #c0392b); }
+
+/* Hamburger */
+.nav-toggler {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.nav-toggler span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--ink, #1a1a1a);
+    border-radius: 2px;
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+    .nav-toggler { display: flex; }
+
+    .nav-links {
+        display: none;
+        position: absolute;
+        top: 56px;
+        left: 0;
+        right: 0;
+        background: var(--warm-white, #fdfcf9);
+        border-bottom: 1px solid var(--border, #e0ddd8);
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 12px 16px;
+        gap: 4px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    #site-nav.open .nav-links { display: flex; }
+
+    .nav-link, .nav-logout { width: 100%; }
+    .nav-logout { margin-left: 0; margin-top: 4px; text-align: left; }
+}

@@ -1,0 +1,157 @@
+/* ══════════════════════════════════════════════════════════════════════════════
+   global.css — shared variables, typography, and components
+   Included on every page.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Variables ─────────────────────────────────────────────────────────────── */
+:root {
+    --cream:      #f7f6f3;
+    --warm-white: #fdfcf9;
+    --ink:        #1a1a1a;
+    --muted:      #888;
+    --border:     #e0ddd8;
+    --blue:       #2c5f9e;
+    --blue-light: #d6e4f7;
+    --blue-hover: #bdd4ef;
+    --red:        #c0392b;
+    --font-serif: 'Source Serif 4', Georgia, serif;
+    --font-display: 'Lora', Georgia, serif;
+}
+
+/* ── Base ──────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--cream);
+    font-family: var(--font-serif);
+    color: var(--ink);
+}
+
+/* ── Badge items (address, date, phone chips) ──────────────────────────────── */
+.badge-item {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 5px;
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 3px 10px;
+    font-size: 11.5px;
+    color: #555;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+.badge-item svg {
+    flex-shrink: 0;
+    opacity: 0.55;
+    margin-top: 2px;
+}
+
+/* ── CTA link button ───────────────────────────────────────────────────────── */
+.cta {
+    display: inline-block;
+    background: var(--blue-light);
+    color: var(--blue);
+    font-family: var(--font-serif);
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 6px 14px;
+    border-radius: 8px;
+    transition: background 0.15s;
+}
+
+.cta:hover { background: var(--blue-hover); }
+
+/* ── Card footer row (cta + favorite btn) ──────────────────────────────────── */
+.card-footer-row {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    flex-wrap: nowrap;
+}
+
+.card-footer-row .cta {
+    flex: 1;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-footer-row .favorite-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-color: #c8c4be;
+}
+
+.card-footer-row .cta::after { content: none; }
+
+/* ── Card header row (title + favorite btn) ────────────────────────────────── */
+.card-header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.card-header-row h3 {
+    margin: 0;
+    flex: 1;
+}
+
+/* ── Favorite button ───────────────────────────────────────────────────────── */
+.favorite-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: var(--font-serif);
+    font-weight: 600;
+    color: var(--muted);
+    padding: 6px 12px;
+    flex-shrink: 0;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    white-space: nowrap;
+}
+
+.favorite-btn:hover {
+    color: var(--red);
+    border-color: var(--red);
+    background: #fdf0ee;
+}
+
+.favorite-btn.favorited {
+    color: var(--red);
+    border-color: var(--red);
+    background: #fdf0ee;
+}
+
+/* ── Section title (used on favorites page) ────────────────────────────────── */
+.section-title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 32px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border);
+}
+
+/* ── Empty state ───────────────────────────────────────────────────────────── */
+.empty-state {
+    text-align: center;
+    color: #aaa;
+    font-size: 14px;
+    padding: 40px 0;
+}

@@ -1,0 +1,47 @@
+<link href="/public/css/navbar.css" rel="stylesheet">
+<script src="/public/js/database.js"></script>
+<nav id="site-nav">
+    <div class="nav-inner">
+        <a class="nav-brand" href="/">Des Moines Finder</a>
+
+        <button class="nav-toggler" aria-label="Toggle navigation" onclick="this.closest('nav').classList.toggle('open')">
+            <span></span><span></span><span></span>
+        </button>
+
+        <div class="nav-links">
+            <a class="nav-link" href="/map">Map</a>
+            {% if is_logged_in|default(false) %}
+            <a class="nav-link" href="/favorites">Favorites</a>
+            {% endif %}
+            {% if not is_logged_in|default(false) %}
+            <a class="nav-link" href="/signin">Sign In</a>
+            {% endif %}
+            {% if is_logged_in|default(false) %}
+            <button id="logoutButton" class="nav-logout">Log Out</button>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+
+
+<script>
+    // Highlight active link
+    document.querySelectorAll(".nav-link").forEach(link => {
+        if (link.href === window.location.href) link.classList.add("active");
+    });
+
+    // Logout
+    const logoutButton = document.getElementById("logoutButton");
+    if (logoutButton) {
+        logoutButton.addEventListener("click", async () => {
+            try {
+                const res = await fetch("/logout", { method: "POST", credentials: "include" });
+                if (handle503(res)) return;
+                window.location.href = "/";
+            } catch (e) {
+                alert("Logout failed.");
+            }
+        });
+    }
+</script>

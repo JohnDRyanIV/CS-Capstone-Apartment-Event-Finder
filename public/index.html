@@ -3,9 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <title>Hello</title>
+    {% include "bootstrap.html" %}
 </head>
 <body>
+    <header>
+        {% include "navbar.html" %}
+    </header>
     <h1>Hello, World.</h1>
     <p>Your Flask app is running.</p>
+    <a href="/map">Go to Map</a>
 </body>
 </html>

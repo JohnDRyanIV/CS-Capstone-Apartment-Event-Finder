@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>My Favorites</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% include "bootstrap.html" %}
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+    <link href="/public/css/global.css" rel="stylesheet">
+    <link href="/public/css/favorites.css" rel="stylesheet">
+</head>
+<body>
+    <header>{% include "navbar.html" %}</header>
+
+    <div class="container py-4">
+        <h1>My Favorites</h1>
+        <p class="text-muted small">Saved apartments and events. Items that are no longer available are automatically hidden.</p>
+
+        <div id="loading">Loading your favorites...</div>
+
+        <div id="content" style="display:none">
+            <div id="apartments-section">
+                <div class="section-title">🔵 Apartments</div>
+                <div id="apartments-grid" class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3"></div>
+            </div>
+
+            <div id="events-section">
+                <div class="section-title">🔴 Events</div>
+                <div id="events-grid" class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/public/js/favorites.js"></script>
+</body>
+</html>
