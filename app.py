@@ -440,6 +440,10 @@ class Favorites(Resource):
 def index():
     return render_template("index.html", **get_template_context())
 
+@app.route("/moving-guide")
+def moving_guide():
+    return render_template("moving-guide.html", **get_template_context())
+
 @app.route("/data/apartments")
 def apartments():
     try:
