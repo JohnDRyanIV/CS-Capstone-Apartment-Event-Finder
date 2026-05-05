@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New Roots — Moving Guide for New Grads & Relocators</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #fff5f7;
+    --ink: #2d1a20;
+    --terracotta: #e05c8a;
+    --sage: #4a8c6a;
+    --gold: #f4a7c0;
+    --dusty-blue: #3a7a5a;
+    --light-sage: #d6f0e4;
+    --light-terracotta: #ffe0ec;
+    --light-blue: #d6f0e4;
+    --border: #f2c4d4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ---- HERO ---- */
+  .hero {
+    background: var(--ink);
+    color: var(--cream);
+    padding: 80px 60px 60px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 420px; height: 420px;
+    border: 1px solid rgba(245,240,232,0.08);
+    border-radius: 50%;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: 30px; right: 30px;
+    width: 220px; height: 220px;
+    border: 1px solid rgba(196,98,58,0.3);
+    border-radius: 50%;
+  }
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--terracotta);
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(48px, 7vw, 88px);
+    font-weight: 900;
+    line-height: 0.95;
+    max-width: 700px;
+    margin-bottom: 28px;
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--terracotta);
+  }
+  .hero-sub {
+    font-size: 16px;
+    font-weight: 300;
+    color: rgba(245,240,232,0.7);
+    max-width: 480px;
+    line-height: 1.7;
+  }
+  .hero-tags {
+    display: flex;
+    gap: 10px;
+    margin-top: 36px;
+    flex-wrap: wrap;
+  }
+  .hero-tag {
+    background: rgba(245,240,232,0.08);
+    border: 1px solid rgba(245,240,232,0.15);
+    color: rgba(245,240,232,0.7);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 20px;
+  }
+
+  /* ---- NAV TABS ---- */
+  .tab-nav {
+    background: white;
+    border-bottom: 1px solid var(--border);
+    padding: 0 60px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .tab-nav::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    padding: 18px 24px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(26,22,18,0.5);
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+    position: relative;
+    bottom: -1px;
+  }
+  .tab-btn:hover { color: var(--ink); }
+  .tab-btn.active {
+    color: var(--terracotta);
+    border-bottom-color: var(--terracotta);
+  }
+
+  /* ---- MAIN LAYOUT ---- */
+  .main-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 60px;
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 60px;
+    align-items: start;
+  }
+
+  /* ---- TOPIC PAGES ---- */
+  .topic-page { display: none; }
+  .topic-page.active { display: block; }
+
+  .topic-header {
+    margin-bottom: 40px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid var(--border);
+  }
+  .topic-category {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+  .cat-financial { background: #fef9e7; color: #9a7a1a; }
+  .cat-search { background: var(--light-blue); color: var(--dusty-blue); }
+  .cat-move { background: var(--light-sage); color: var(--sage); }
+  .cat-settle { background: var(--light-terracotta); color: var(--terracotta); }
+
+  .topic-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 16px;
+  }
+  .topic-header p {
+    font-size: 16px;
+    color: rgba(26,22,18,0.65);
+    max-width: 560px;
+  }
+
+  /* Info blocks */
+  .info-section {
+    margin-bottom: 36px;
+  }
+  .info-section h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .info-section h3 .icon {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+  .info-section p {
+    color: rgba(26,22,18,0.75);
+    margin-bottom: 12px;
+    font-size: 15px;
+  }
+
+  /* Cost table */
+  .cost-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 14px;
+  }
+  .cost-table thead tr {
+    background: var(--ink);
+    color: var(--cream);
+  }
+  .cost-table thead th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .cost-table tbody tr {
+    border-bottom: 1px solid var(--border);
+  }
+  .cost-table tbody tr:hover { background: rgba(196,98,58,0.04); }
+  .cost-table tbody td {
+    padding: 12px 16px;
+    vertical-align: top;
+  }
+  .cost-table .amount {
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    color: var(--terracotta);
+    white-space: nowrap;
+  }
+  .cost-table .note {
+    font-size: 12px;
+    color: rgba(26,22,18,0.5);
+    margin-top: 3px;
+  }
+  .cost-table tfoot tr {
+    background: var(--light-terracotta);
+  }
+  .cost-table tfoot td {
+    padding: 14px 16px;
+    font-weight: 500;
+  }
+  .cost-table tfoot .amount { font-size: 16px; }
+
+  /* Tip box */
+  .tip-box {
+    border-left: 3px solid var(--gold);
+    background: #fefbf3;
+    padding: 18px 22px;
+    border-radius: 0 8px 8px 0;
+    margin: 24px 0;
+  }
+  .tip-box strong {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+  .tip-box p { font-size: 14px; color: rgba(26,22,18,0.75); margin: 0; }
+
+  /* Warning box */
+  .warn-box {
+    border-left: 3px solid var(--terracotta);
+    background: var(--light-terracotta);
+    padding: 18px 22px;
+    border-radius: 0 8px 8px 0;
+    margin: 24px 0;
+  }
+  .warn-box strong {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--terracotta);
+    margin-bottom: 8px;
+  }
+  .warn-box p { font-size: 14px; color: rgba(26,22,18,0.75); margin: 0; }
+
+  /* Checklist */
+  .checklist {
+    list-style: none;
+    margin: 16px 0;
+  }
+  .checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(216,207,192,0.4);
+    font-size: 15px;
+    color: rgba(26,22,18,0.8);
+  }
+  .checklist li::before {
+    content: '○';
+    color: var(--terracotta);
+    flex-shrink: 0;
+    font-size: 14px;
+    margin-top: 2px;
+  }
+  .checklist li strong { color: var(--ink); }
+
+  /* Grid cards */
+  .card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 20px 0;
+  }
+  .info-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .info-card .card-icon { font-size: 22px; margin-bottom: 10px; }
+  .info-card h4 {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .info-card p {
+    font-size: 13px;
+    color: rgba(26,22,18,0.65);
+    margin: 0;
+  }
+
+  /* ---- HOME / OVERVIEW ---- */
+  .overview-intro {
+    max-width: 600px;
+    margin-bottom: 48px;
+  }
+  .overview-intro h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 38px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    line-height: 1.2;
+  }
+  .overview-intro p {
+    color: rgba(26,22,18,0.65);
+    font-size: 16px;
+  }
+  .topic-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .topic-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+  .topic-card::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    transform: scaleX(0);
+    transition: transform 0.25s;
+    transform-origin: left;
+  }
+  .topic-card.tc-financial::before { background: var(--gold); }
+  .topic-card.tc-search::before { background: var(--dusty-blue); }
+  .topic-card.tc-move::before { background: var(--sage); }
+  .topic-card.tc-settle::before { background: var(--terracotta); }
+  .topic-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
+  .topic-card:hover::before { transform: scaleX(1); }
+  .tc-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: rgba(26,22,18,0.3);
+    margin-bottom: 16px;
+  }
+  .tc-emoji { font-size: 28px; margin-bottom: 14px; display: block; }
+  .topic-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+  .topic-card p {
+    font-size: 13px;
+    color: rgba(26,22,18,0.6);
+    line-height: 1.6;
+    margin: 0;
+  }
+  .tc-arrow {
+    display: inline-block;
+    margin-top: 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: rgba(26,22,18,0.35);
+    transition: color 0.2s;
+  }
+  .topic-card:hover .tc-arrow { color: var(--terracotta); }
+
+  /* ---- SIDEBAR ---- */
+  .sidebar { }
+  .sidebar-section {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+  .sidebar-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(26,22,18,0.4);
+    margin-bottom: 20px;
+  }
+  .article-link {
+    display: block;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    text-decoration: none;
+    color: var(--ink);
+    transition: color 0.2s;
+  }
+  .article-link:last-child { border-bottom: none; padding-bottom: 0; }
+  .article-link:hover { color: var(--terracotta); }
+  .article-link .al-source {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(26,22,18,0.35);
+    margin-bottom: 5px;
+  }
+  .article-link .al-title {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+  .article-link .al-arrow {
+    font-size: 11px;
+    color: rgba(26,22,18,0.3);
+    margin-top: 4px;
+  }
+  .sidebar-section.dark {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--cream);
+  }
+  .sidebar-section.dark .sidebar-label { color: rgba(245,240,232,0.4); }
+  .sidebar-section.dark p { font-size: 14px; color: rgba(245,240,232,0.7); margin-bottom: 18px; }
+  .tool-links { list-style: none; }
+  .tool-links li {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(245,240,232,0.08);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .tool-links li:last-child { border: none; }
+  .tool-links a {
+    color: var(--cream);
+    text-decoration: none;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+  }
+  .tool-links a:hover { opacity: 1; color: var(--gold); }
+  .tool-icon { font-size: 14px; }
+
+  /* Quick stat badges */
+  .stat-row {
+    display: flex;
+    gap: 12px;
+    margin: 24px 0;
+    flex-wrap: wrap;
+  }
+  .stat-badge {
+    flex: 1;
+    min-width: 110px;
+    background: var(--ink);
+    color: var(--cream);
+    border-radius: 10px;
+    padding: 18px 16px;
+    text-align: center;
+  }
+  .stat-badge .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--terracotta);
+    display: block;
+  }
+  .stat-badge .stat-label {
+    font-size: 11px;
+    opacity: 0.6;
+    margin-top: 4px;
+  }
+
+  /* Step list */
+  .step-list { list-style: none; counter-reset: steps; margin: 16px 0; }
+  .step-list li {
+    counter-increment: steps;
+    display: flex;
+    gap: 18px;
+    padding: 18px 0;
+    border-bottom: 1px solid rgba(216,207,192,0.4);
+    align-items: flex-start;
+  }
+  .step-list li::before {
+    content: counter(steps, decimal-leading-zero);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--terracotta);
+    flex-shrink: 0;
+    margin-top: 2px;
+    min-width: 28px;
+  }
+  .step-list li .step-content h4 {
+    font-weight: 500;
+    font-size: 15px;
+    margin-bottom: 5px;
+  }
+  .step-list li .step-content p {
+    font-size: 13px;
+    color: rgba(26,22,18,0.6);
+    margin: 0;
+  }
+
+  /* Back button */
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(26,22,18,0.4);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 32px;
+    transition: color 0.2s;
+  }
+  .back-btn:hover { color: var(--terracotta); }
+
+  /* divider */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 32px 0;
+  }
+
+  /* responsive */
+  @media (max-width: 900px) {
+    .hero { padding: 50px 30px 40px; }
+    .tab-nav { padding: 0 20px; }
+    .main-content { grid-template-columns: 1fr; padding: 40px 30px; gap: 40px; }
+    .topic-cards { grid-template-columns: 1fr; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Animate in */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .topic-page.active { animation: fadeUp 0.3s ease; }
+</style>
+</head>
+<body>
+  <header>{% include "navbar.html" %}</header>
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">New Roots — Moving Guide</div>
+  <h1>Your new<br>chapter <em>starts</em><br>here.</h1>
+  <p class="hero-sub">Everything new grads and relocators need to know about finding apartments, budgeting smart, and settling into a new city.</p>
+</div>
+
+<!-- NAV TABS -->
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('home')">Overview</button>
+  <button class="tab-btn" onclick="showTab('costs')">💸 Moving Costs</button>
+  <button class="tab-btn" onclick="showTab('search')">🔍 Finding an Apartment</button>
+  <button class="tab-btn" onclick="showTab('lease')">📋 Reading Your Lease</button>
+  <button class="tab-btn" onclick="showTab('moving')">📦 Moving Day</button>
+  <button class="tab-btn" onclick="showTab('settle')">🌆 Settling In</button>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+
+  <!-- PRIMARY CONTENT AREA -->
+  <div class="content-area">
+
+    <!-- HOME / OVERVIEW -->
+    <div class="topic-page active" id="page-home">
+      <div class="overview-intro">
+        <h2>What do you need to know?</h2>
+        <p>Pick a topic below for a full breakdown — from your first apartment search to finding local events after you've unpacked.</p>
+      </div>
+      <div class="topic-cards">
+        <div class="topic-card tc-financial" onclick="showTab('costs')">
+          <div class="tc-num">01</div>
+          <span class="tc-emoji">💸</span>
+          <h3>How much should I expect to spend?</h3>
+          <p>A full breakdown of upfront costs, monthly fees, hidden charges, and what to budget for.</p>
+          <div class="tc-arrow">Read guide →</div>
+        </div>
+        <div class="topic-card tc-search" onclick="showTab('search')">
+          <div class="tc-num">02</div>
+          <span class="tc-emoji">🔍</span>
+          <h3>How do I find the right apartment?</h3>
+          <p>Where to search, what to look for, red flags to avoid, and how to compete in a tough market.</p>
+          <div class="tc-arrow">Read guide →</div>
+        </div>
+        <div class="topic-card tc-search" onclick="showTab('lease')">
+          <div class="tc-num">03</div>
+          <span class="tc-emoji">📋</span>
+          <h3>What's actually in my lease?</h3>
+          <p>The clauses that matter most, tenant rights, and what to negotiate before you sign.</p>
+          <div class="tc-arrow">Read guide →</div>
+        </div>
+        <div class="topic-card tc-move" onclick="showTab('moving')">
+          <div class="tc-num">04</div>
+          <span class="tc-emoji">📦</span>
+          <h3>What's the best way to move?</h3>
+          <p>DIY vs. movers, a moving day timeline, and how to avoid the most common moving mistakes.</p>
+          <div class="tc-arrow">Read guide →</div>
+        </div>
+        <div class="topic-card tc-settle" onclick="showTab('settle')">
+          <div class="tc-num">05</div>
+          <span class="tc-emoji">🌆</span>
+          <h3>How do I settle into a new city?</h3>
+          <p>Finding community, local events, essential services, and making a new place feel like home.</p>
+          <div class="tc-arrow">Read guide →</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: COSTS -->
+    <div class="topic-page" id="page-costs">
+      <button class="back-btn" onclick="showTab('home')">← Back to overview</button>
+      <div class="topic-header">
+        <span class="topic-category cat-financial">Financial Guide</span>
+        <h2>How much should I expect to spend getting a new apartment?</h2>
+        <p>Moving involves a lot more than just first month's rent. Here's every cost you should plan for — so nothing catches you off guard.</p>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-badge"><span class="stat-num">3–4×</span><div class="stat-label">months rent upfront</div></div>
+        <div class="stat-badge"><span class="stat-num">$1,400</span><div class="stat-label">avg move-in costs</div></div>
+        <div class="stat-badge"><span class="stat-num">30%</span><div class="stat-label">income rule for rent</div></div>
+      </div>
+
+      <div class="info-section">
+        <h3><span class="icon" style="background:#fef9e7">💵</span>Upfront Move-In Fees</h3>
+        <p>Before you get your keys, expect to pay a significant chunk upfront. Landlords use these to protect themselves — knowing what's standard helps you push back on anything unreasonable.</p>
+        <table class="cost-table">
+          <thead>
+            <tr><th>Fee</th><th>Typical Range</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>First Month's Rent</strong><div class="note">Always required</div></td>
+              <td class="amount">1× rent</td>
+              <td>Due on or before move-in day</td>
+            </tr>
+            <tr>
+              <td><strong>Last Month's Rent</strong><div class="note">Not always required</div></td>
+              <td class="amount">1× rent</td>
+              <td>Some landlords require this upfront as security</td>
+            </tr>
+            <tr>
+              <td><strong>Security Deposit</strong><div class="note">Usually required</div></td>
+              <td class="amount">1–2× rent</td>
+              <td>Returned at move-out if no damage; limits vary by state law</td>
+            </tr>
+            <tr>
+              <td><strong>Application Fee</strong><div class="note">Per application</div></td>
+              <td class="amount">$25–$100</td>
+              <td>Covers credit/background checks; usually non-refundable</td>
+            </tr>
+            <tr>
+              <td><strong>Admin / Move-In Fee</strong><div class="note">Some landlords</div></td>
+              <td class="amount">$150–$500</td>
+              <td>One-time processing fee, separate from deposit</td>
+            </tr>
+            <tr>
+              <td><strong>Pet Deposit / Fee</strong><div class="note">If applicable</div></td>
+              <td class="amount">$200–$600</td>
+              <td>Deposit may be refundable; "pet fee" usually isn't</td>
+            </tr>
+            <tr>
+              <td><strong>Parking Deposit</strong><div class="note">If applicable</div></td>
+              <td class="amount">$50–$300</td>
+              <td>Sometimes included in rent, sometimes separate</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td><strong>Total Upfront (typical)</strong></td>
+              <td class="amount">2–4× rent</td>
+              <td>Plan for the high end to be safe</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="tip-box">
+        <strong>💡 Pro Tip</strong>
+        <p>Always ask what is and isn't refundable. A "non-refundable deposit" is really just a fee — know the difference before you sign.</p>
+      </div>
+
+      <div class="info-section">
+        <h3><span class="icon" style="background:#e8f0f5">📅</span>Ongoing Monthly Costs</h3>
+        <p>Rent is rarely your only monthly cost. Factor these into your budget before committing to a place.</p>
+        <table class="cost-table">
+          <thead>
+            <tr><th>Cost</th><th>Typical Range</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Rent</strong></td><td class="amount">Varies</td><td>Your baseline — use the 30% income rule as a guideline</td></tr>
+            <tr><td><strong>Electricity</strong></td><td class="amount">$40–$150/mo</td><td>Higher in summer/winter; ask landlord for avg</td></tr>
+            <tr><td><strong>Gas / Heat</strong></td><td class="amount">$30–$100/mo</td><td>Sometimes included in rent — always ask</td></tr>
+            <tr><td><strong>Water / Sewer</strong></td><td class="amount">$20–$60/mo</td><td>Often landlord-paid, but verify</td></tr>
+            <tr><td><strong>Internet</strong></td><td class="amount">$40–$80/mo</td><td>Check what's available in the building first</td></tr>
+            <tr><td><strong>Renters Insurance</strong></td><td class="amount">$10–$25/mo</td><td>Highly recommended — some landlords require it</td></tr>
+            <tr><td><strong>Parking</strong></td><td class="amount">$0–$200/mo</td><td>Can be significant in cities</td></tr>
+            <tr><td><strong>Pet Rent</strong></td><td class="amount">$25–$75/mo</td><td>Monthly fee on top of deposit, per pet</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="info-section">
+        <h3><span class="icon" style="background:#e8f0e4">📦</span>One-Time Moving Expenses</h3>
+        <p>Beyond the apartment itself, the physical act of moving costs money too.</p>
+        <table class="cost-table">
+          <thead>
+            <tr><th>Expense</th><th>Typical Cost</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Moving truck rental (DIY)</strong></td><td class="amount">$100–$500</td></tr>
+            <tr><td><strong>Professional movers (local)</strong></td><td class="amount">$400–$1,500</td></tr>
+            <tr><td><strong>Packing supplies</strong></td><td class="amount">$50–$150</td></tr>
+            <tr><td><strong>Storage unit (if needed)</strong></td><td class="amount">$75–$200/mo</td></tr>
+            <tr><td><strong>Cleaning supplies / cleaning service</strong></td><td class="amount">$50–$200</td></tr>
+            <tr><td><strong>Initial furniture / essentials</strong></td><td class="amount">$500–$3,000+</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="warn-box">
+        <strong>⚠️ Watch Out</strong>
+        <p>Some landlords charge early termination fees (often 1–2 months rent) if you break your lease. Read this clause carefully before signing — especially if you're not sure how long you'll stay.</p>
+      </div>
+    </div>
+
+    <!-- PAGE: SEARCH -->
+    <div class="topic-page" id="page-search">
+      <button class="back-btn" onclick="showTab('home')">← Back to overview</button>
+      <div class="topic-header">
+        <span class="topic-category cat-search">Apartment Search</span>
+        <h2>How do I find the right apartment in a new city?</h2>
+        <p>Searching from afar is tough. Here's a smart, step-by-step approach to finding a place you'll actually love.</p>
+      </div>
+
+      <div class="info-section">
+        <h3><span class="icon" style="background:#e8f0f5">🗺️</span>Start with Neighborhoods, Not Listings</h3>
+        <p>Before you look at a single apartment, research neighborhoods. Cost of living, commute time, walkability, and vibe vary enormously even within the same city.</p>
+        <div class="card-grid">
+          <div class="info-card">
+            <div class="card-icon">🚶</div>
+            <h4>Walkability Score</h4>
+            <p>Use Walk Score to see how easy it is to get around without a car. Matters a lot for day-to-day quality of life.</p>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🚌</div>
+            <h4>Transit Access</h4>
+            <p>Google Maps a mock commute to your office during rush hour — not just the estimated time, but the actual route.</p>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🍕</div>
+            <h4>Local Amenities</h4>
+            <p>Check what's nearby: grocery stores, gyms, coffee shops, parks. These matter more after the novelty wears off.</p>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">📈</div>
+            <h4>Rent Trends</h4>
+            <p>Is the neighborhood gentrifying rapidly? Rents might spike at renewal time. Check Zillow's rent trends for the ZIP code.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h3><span class="icon" style="background:#e8f0f5">🔎</span>Where to Search</h3>
+        <ul class="checklist">
+          <li><div><strong>Zillow / Apartments.com / Rent.com</strong> — Largest listing aggregators; good starting point</div></li>
+          <li><div><strong>Facebook Marketplace</strong> — Private landlords, sometimes lower fees, no broker markup</div></li>
+          <li><div><strong>Craigslist</strong> — Still active in many cities; always verify before paying anything</div></li>
+          <li><div><strong>Reddit (r/[yourcity])</strong> — Locals share leads, rate neighborhoods, warn about scams</div></li>
+          <li><div><strong>Your employer's Slack/Discord</strong> — Coworkers often know of sublets or openings</div></li>
+          <li><div><strong>Local Facebook groups</strong> — Search "[City] apartments for rent" or housing groups</div></li>
+        </ul>
+      </div>
+
+      <div class="tip-box">
+        <strong>💡 Searching Remotely?</strong>
+        <p>Always ask for a video walkthrough if you can't visit in person. Request that the landlord walk you through every room live on video, and check YouTube for street view walkthroughs of the neighborhood.</p>
+      </div>
+
+      <div class="info-section">
+        <h3><span class="icon" style="background:#fef9e7">🚩</span>Red Flags to Watch For</h3>
+        <ul class="checklist">
+          <li><div><strong>Rent is dramatically below market</strong> — If it seems too good to be true, it almost always is</div></li>
+          <li><div><strong>Landlord won't meet in person or show the unit</strong> — Major scam indicator</div></li>
+          <li><div><strong>Requests payment via wire transfer, Zelle, or gift cards</strong> — Never pay before signing a lease</div></li>
+          <li><div><strong>Lots of deferred maintenance visible</strong> — Suggests a landlord who doesn't maintain the property</div></li>
+          <li><div><strong>High turnover in the building</strong> — Ask how long current tenants have lived there</div></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- PAGE: LEASE -->
+    <div class="topic-page" id="page-lease">
+      <button class="back-btn" onclick="showTab('home')">← Back to overview</button>
+      <div class="topic-header">
+        <span class="topic-category cat-search">Lease Guide</span>
+        <h2>What's actually in my lease — and what should I negotiate?</h2>
+        <p>A lease is a legal contract. Understanding what you're agreeing to (and what you can push back on) protects you for the entire tenancy.</p>
+      </div>
+
+      <div class="info-section">
+        <h3><span class="icon" style="background:#e8f0f5">📋</span>Clauses You Must Read</h3>
+        <ul class="checklist">
+          <li><div><strong>Lease term & end date</strong> — Month-to-month vs. fixed term; what happens when it ends</div></li>
+          <li><div><strong>Rent amount & due date</strong> — When rent is due and when it's considered "late"</div></li>
+          <li><div><strong>Late fees</strong> — How much and when they kick in (some states cap this)</div></li>
+          <li><div><strong>Security deposit terms</strong> — What can be deducted, timeline for return, how disputes are handled</div></li>
+          <li><div><strong>Early termination clause</strong> — Can you break the lease early? At what cost?</div></li>
+          <li><div><strong>Subletting policy</strong> — Can you sublet if you travel or move temporarily?</div></li>
+          <li><div><strong>Guest policy</strong> — Long-term guests may technically violate some leases</div></li>
+          <li><div><strong>Maintenance & repair responsibilities</strong> — Who fixes what, and how quickly</div></li>
+          <li><div><strong>Renewal terms & rent increase caps</strong> — How much notice you get before rent goes up</div></li>
+          <li><div><strong>Entry notice requirements</strong> — Landlords typically must give 24–48 hours notice before entering</div></li>
+        </ul>
+      </div>
+
+      <div class="info-section">
+        <h3><span class="icon" style="background:#e8f0e4">🤝</span>What You Can Often Negotiate</h3>
+        <p>Many tenants don't realize that lease terms aren't always final. In slower rental markets especially, landlords are often willing to negotiate.</p>
+        <div class="card-grid">
+          <div class="info-card">
+            <div class="card-icon">📅</div>
+            <h4>Move-in Date</h4>
+            <p>Ask for a prorated first month if you can't move in on the 1st.</p>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🐾</div>
+            <h4>Pet Policy</h4>
+            <p>Some no-pet landlords will make exceptions for a higher deposit.</p>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🔨</div>
+            <h4>Renovations / Repairs</h4>
+            <p>Ask for fixes or upgrades in writing before signing — not verbal promises.</p>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">💰</div>
+            <h4>Rent Amount</h4>
+            <p>Especially if the unit has been vacant awhile, there may be room to negotiate.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>⚠️ Document Everything</strong>
+        <p>On move-in day, photograph every existing scratch, stain, or damage in every room, and email the photos to your landlord. This protects your deposit when you move out.</p>
+      </div>
+    </div>
+
+    <!-- PAGE: MOVING DAY -->
+    <div class="topic-page" id="page-moving">
+      <button class="back-btn" onclick="showTab('home')">← Back to overview</button>
+      <div class="topic-header">
+        <span class="topic-category cat-move">Moving Day</span>
+        <h2>What's the best way to plan and execute a move?</h2>
+        <p>Moving doesn't have to be chaos. A little planning goes a very long way.</p>
+      </div>
+
+      <div class="info-section">
+        <h3><span class="icon" style="background:#e8f0e4">🗓️</span>Your Moving Timeline</h3>
+        <ol class="step-list">
+          <li><div class="step-content"><h4>6–8 Weeks Before</h4><p>Start decluttering. Sell, donate, or trash anything you don't want to move. Book movers or a truck — weekends book up fast.</p></div></li>
+          <li><div class="step-content"><h4>4–5 Weeks Before</h4><p>Gather packing supplies. Begin packing non-essentials (books, seasonal items, décor). Notify your employer, bank, and subscriptions of your address change.</p></div></li>
+          <li><div class="step-content"><h4>2–3 Weeks Before</h4><p>Pack most belongings. Confirm mover booking. Schedule utilities at new place to start on move-in day. Cancel local gym, find one near new home.</p></div></li>
+          <li><div class="step-content"><h4>1 Week Before</h4><p>Pack "last box" with essentials for moving night. Defrost refrigerator. Confirm movers again. Fill any prescriptions you'll need.</p></div></li>
+          <li><div class="step-content"><h4>Moving Day</h4><p>Take photos of old apartment before leaving. Do a final walkthrough. Collect your deposit receipt or document the condition in writing.</p></div></li>
+          <li><div class="step-content"><h4>First Week After</h4><p>File a change-of-address with USPS. Update your driver's license and voter registration. Locate nearest ER, urgent care, grocery store, pharmacy.</p></div></li>
+        </ol>
+      </div>
+
+      <div class="info-section">
+        <h3><span class="icon" style="background:#e8f0e4">🚚</span>DIY vs. Hiring Movers</h3>
+        <table class="cost-table">
+          <thead>
+            <tr><th>Option</th><th>Best For</th><th>Avg Cost</th><th>Watch Out</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>DIY Truck Rental</strong></td>
+              <td>Short distance, small move, flexible schedule</td>
+              <td class="amount">$100–$500</td>
+              <td>Hidden fees (mileage, fuel, insurance, dollies)</td>
+            </tr>
+            <tr>
+              <td><strong>Moving Container</strong></td>
+              <td>Long distance or flexible timing</td>
+              <td class="amount">$700–$3,000</td>
+              <td>You still pack and load everything yourself</td>
+            </tr>
+            <tr>
+              <td><strong>Local Movers</strong></td>
+              <td>In-city moves, heavier furniture</td>
+              <td class="amount">$400–$1,500</td>
+              <td>Book early; get quotes from 3+ companies</td>
+            </tr>
+            <tr>
+              <td><strong>Long-Distance Movers</strong></td>
+              <td>Interstate or cross-country moves</td>
+              <td class="amount">$2,000–$8,000</td>
+              <td>Get binding quotes; check USDOT licensing</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tip-box">
+        <strong>💡 Moving Hack</strong>
+        <p>Mid-week and mid-month moves are often 20–30% cheaper. Most people move on weekends and at the end of the month — avoid the rush and save money.</p>
+      </div>
+    </div>
+
+    <!-- PAGE: SETTLE IN -->
+    <div class="topic-page" id="page-settle">
+      <button class="back-btn" onclick="showTab('home')">← Back to overview</button>
+      <div class="topic-header">
+        <span class="topic-category cat-settle">Settling In</span>
+        <h2>How do I build a life in a new city?</h2>
+        <p>The hardest part of moving isn't the boxes — it's making a new place feel like home. Here's how to do it intentionally.</p>
+      </div>
+
+      <div class="info-section">
+        <h3><span class="icon" style="background:#faf0eb">🌆</span>Your First 30 Days Checklist</h3>
+        <ul class="checklist">
+          <li><div><strong>Register your car</strong> — Most states require this within 30–90 days of establishing residency</div></li>
+          <li><div><strong>Update your driver's license</strong> — Usually required within 30–60 days</div></li>
+          <li><div><strong>Register to vote</strong> — Deadlines vary; do this early so you don't miss an election</div></li>
+          <li><div><strong>Find a primary care doctor</strong> — Harder than you'd think in some cities; start early</div></li>
+          <li><div><strong>Open a local bank account</strong> — Or confirm your current bank has branches or fee-free ATMs nearby</div></li>
+          <li><div><strong>Locate your nearest pharmacy, grocery, and laundromat</strong></div></li>
+          <li><div><strong>Save important numbers</strong> — Non-emergency police line, building super, local services</div></li>
+        </ul>
+      </div>
+
+      <div class="info-section">
+        <h3><span class="icon" style="background:#faf0eb">🤝</span>Finding Your Community</h3>
+        <p>Building a social life from scratch as an adult is genuinely hard — but very doable with the right approach. The key is consistency over intensity.</p>
+        <div class="card-grid">
+          <div class="info-card">
+            <div class="card-icon">📱</div>
+            <h4>Meetup.com</h4>
+            <p>Groups for almost every interest — hiking, board games, tech, cooking, running clubs, and more.</p>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🎭</div>
+            <h4>Eventbrite</h4>
+            <p>Concerts, networking events, workshops, pop-ups. Great for one-off discovery of what's happening locally.</p>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🏋️</div>
+            <h4>Join a Gym or Studio</h4>
+            <p>Group fitness classes are one of the fastest ways to see the same people repeatedly — how friendships form.</p>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🙋</div>
+            <h4>Volunteer</h4>
+            <p>VolunteerMatch and local nonprofits connect you to consistent opportunities to meet people with shared values.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>💡 The Consistency Trick</strong>
+        <p>You don't need to love an activity to make friends through it — you just need to show up to the same place, with the same people, regularly. Pick one recurring thing and commit to three months.</p>
+      </div>
+    </div>
+
+  </div><!-- /content-area -->
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <!-- Dynamic article links per section -->
+    <div class="sidebar-section" id="sidebar-articles">
+      <div class="sidebar-label">Related Reading</div>
+
+      <div class="article-group" id="articles-home">
+        <a class="article-link" href="https://www.nerdwallet.com/article/finance/moving-to-a-new-city" target="_blank">
+          <div class="al-source">NerdWallet</div>
+          <div class="al-title">Ultimate Financial Guide to Moving to a New City</div>
+          <div class="al-arrow">↗</div>
+        </a>
+        <a class="article-link" href="https://www.apartmentlist.com/renter-life/moving-to-a-new-city" target="_blank">
+          <div class="al-source">Apartment List</div>
+          <div class="al-title">How to Move to a New City: A Complete Checklist</div>
+          <div class="al-arrow">↗</div>
+        </a>
+        <a class="article-link" href="https://www.reddit.com/r/moving/" target="_blank">
+          <div class="al-source">Reddit</div>
+          <div class="al-title">r/moving — Community tips from real people</div>
+          <div class="al-arrow">↗</div>
+        </a>
+      </div>
+
+      <div class="article-group" id="articles-costs" style="display:none">
+        <a class="article-link" href="https://www.nerdwallet.com/article/finance/how-much-to-save-before-moving-out" target="_blank">
+          <div class="al-source">NerdWallet</div>
+          <div class="al-title">How Much to Save Before Moving Out on Your Own</div>
+          <div class="al-arrow">↗</div>
+        </a>
+        <a class="article-link" href="https://www.apartmentguide.com/blog/apartment-move-in-costs/" target="_blank">
+          <div class="al-source">Apartment Guide</div>
+          <div class="al-title">What Are Typical Apartment Move-In Costs?</div>
+          <div class="al-arrow">↗</div>
+        </a>
+        <a class="article-link" href="https://www.ramseysolutions.com/real-estate/how-much-does-it-cost-to-move" target="_blank">
+          <div class="al-source">Ramsey Solutions</div>
+          <div class="al-title">How Much Does It Really Cost to Move?</div>
+          <div class="al-arrow">↗</div>
+        </a>
+        <a class="article-link" href="https://www.investopedia.com/financial-edge/0912/the-real-cost-of-renting.aspx" target="_blank">
+          <div class="al-source">Investopedia</div>
+          <div class="al-title">The Real Cost of Renting an Apartment</div>
+          <div class="al-arrow">↗</div>
+        </a>
+      </div>
+
+      <div class="article-group" id="articles-search" style="display:none">
+        <a class="article-link" href="https://www.apartmentlist.com/renter-life/apartment-hunting-tips" target="_blank">
+          <div class="al-source">Apartment List</div>
+          <div class="al-title">25 Apartment Hunting Tips That Will Save You Thousands</div>
+          <div class="al-arrow">↗</div>
+        </a>
+        <a class="article-link" href="https://www.consumerfinance.gov/renting/" target="_blank">
+          <div class="al-source">CFPB</div>
+          <div class="al-title">Renter Resources from the Consumer Financial Protection Bureau</div>
+          <div class="al-arrow">↗</div>
+        </a>
+        <a class="article-link" href="https://www.reddit.com/r/FirstTimeHomeBuyer/comments/apartment_hunting/" target="_blank">
+          <div class="al-source">Reddit</div>
+          <div class="al-title">Community apartment hunting Q&A</div>
+          <div class="al-arrow">↗</div>
+        </a>
+      </div>
+
+      <div class="article-group" id="articles-lease" style="display:none">
+        <a class="article-link" href="https://www.avail.co/education/articles/understanding-your-lease" target="_blank">
+          <div class="al-source">Avail</div>
+          <div class="al-title">How to Read and Understand Your Lease Agreement</div>
+          <div class="al-arrow">↗</div>
+        </a>
+        <a class="article-link" href="https://www.nolo.com/legal-encyclopedia/tenant-rights.html" target="_blank">
+          <div class="al-source">Nolo</div>
+          <div class="al-title">Tenant Rights: What Every Renter Should Know</div>
+          <div class="al-arrow">↗</div>
+        </a>
+        <a class="article-link" href="https://www.hud.gov/topics/rental_assistance/tenantrights" target="_blank">
+          <div class="al-source">HUD.gov</div>
+          <div class="al-title">Federal Tenant Rights and Fair Housing Information</div>
+          <div class="al-arrow">↗</div>
+        </a>
+      </div>
+
+      <div class="article-group" id="articles-moving" style="display:none">
+        <a class="article-link" href="https://www.moving.com/tips/ultimate-moving-checklist/" target="_blank">
+          <div class="al-source">Moving.com</div>
+          <div class="al-title">The Ultimate Moving Checklist & Timeline</div>
+          <div class="al-arrow">↗</div>
+        </a>
+        <a class="article-link" href="https://www.angi.com/articles/how-to-hire-a-moving-company.htm" target="_blank">
+          <div class="al-source">Angi</div>
+          <div class="al-title">How to Hire a Moving Company (and Avoid Scams)</div>
+          <div class="al-arrow">↗</div>
+        </a>
+        <a class="article-link" href="https://www.consumerreports.org/cro/moving-companies/buying-guide.htm" target="_blank">
+          <div class="al-source">Consumer Reports</div>
+          <div class="al-title">Moving Company Buying Guide</div>
+          <div class="al-arrow">↗</div>
+        </a>
+      </div>
+
+      <div class="article-group" id="articles-settle" style="display:none">
+        <a class="article-link" href="https://www.meetup.com" target="_blank">
+          <div class="al-source">Meetup</div>
+          <div class="al-title">Find local groups and events near you</div>
+          <div class="al-arrow">↗</div>
+        </a>
+        <a class="article-link" href="https://www.eventbrite.com" target="_blank">
+          <div class="al-source">Eventbrite</div>
+          <div class="al-title">Discover events and experiences in your new city</div>
+          <div class="al-arrow">↗</div>
+        </a>
+        <a class="article-link" href="https://www.reddit.com/r/moving/wiki/settling_in" target="_blank">
+          <div class="al-source">Reddit</div>
+          <div class="al-title">Community guide: Making friends in a new city</div>
+          <div class="al-arrow">↗</div>
+        </a>
+        <a class="article-link" href="https://www.volunteermatch.org" target="_blank">
+          <div class="al-source">VolunteerMatch</div>
+          <div class="al-title">Find volunteer opportunities near your new home</div>
+          <div class="al-arrow">↗</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Tools box -->
+    <div class="sidebar-section dark">
+      <div class="sidebar-label">Useful Tools</div>
+      <p>Helpful resources to research apartments, neighborhoods, and moving costs.</p>
+      <ul class="tool-links">
+        <li><span class="tool-icon">🗺️</span><a href="https://www.walkscore.com" target="_blank">Walk Score — Neighborhood walkability</a></li>
+        <li><span class="tool-icon">🏠</span><a href="https://www.zillow.com" target="_blank">Zillow — Listings & rent estimates</a></li>
+        <li><span class="tool-icon">🏢</span><a href="https://www.apartments.com" target="_blank">Apartments.com — Search rentals</a></li>
+        <li><span class="tool-icon">📦</span><a href="https://www.moving.com" target="_blank">Moving.com — Mover quotes & tools</a></li>
+        <li><span class="tool-icon">🛡️</span><a href="https://www.policygenius.com/renters-insurance/" target="_blank">Policygenius — Renters insurance</a></li>
+        <li><span class="tool-icon">📬</span><a href="https://moversguide.usps.com" target="_blank">USPS Change of Address</a></li>
+        <li><span class="tool-icon">🗳️</span><a href="https://vote.gov/register" target="_blank">Vote.gov — Voter registration</a></li>
+      </ul>
+    </div>
+
+  </aside>
+</div><!-- /main-content -->
+
+<script>
+  const tabs = {
+    'home':   { btn: 0, page: 'page-home',   articles: 'articles-home' },
+    'costs':  { btn: 1, page: 'page-costs',  articles: 'articles-costs' },
+    'search': { btn: 2, page: 'page-search', articles: 'articles-search' },
+    'lease':  { btn: 3, page: 'page-lease',  articles: 'articles-lease' },
+    'moving': { btn: 4, page: 'page-moving', articles: 'articles-moving' },
+    'settle': { btn: 5, page: 'page-settle', articles: 'articles-settle' },
+  };
+
+  function showTab(id) {
+    // Hide all pages & article groups
+    document.querySelectorAll('.topic-page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.article-group').forEach(a => a.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+    const t = tabs[id];
+    document.getElementById(t.page).classList.add('active');
+    document.getElementById(t.articles).style.display = 'block';
+    document.querySelectorAll('.tab-btn')[t.btn].classList.add('active');
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
