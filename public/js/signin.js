@@ -72,10 +72,27 @@ async function registerCallback(response) {
 		alert("Registration failed: " + result.message);
 		return;
 	}
-	alert("Registration successful! Welcome, " + result.displayName);
-	// You can redirect the user to another page here. It is commented for right now.
-	// window.location.href = "/";
-	return;
+	// Auto-login after successful registration
+	const username = document.getElementById("registerUsername").value;
+	const password = document.getElementById("registerPassword").value;
+	fetch("/login", {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ username, password }),
+		credentials: "include"
+	})
+	.then(res => {
+		if (res.ok) {
+			window.location.href = "/map";
+		} else {
+			alert("Registered! Please sign in.");
+			switchTab("login");
+		}
+	})
+	.catch(() => {
+		alert("Registered! Please sign in.");
+		switchTab("login");
+	});
 }
 
 // We validate the register form here
@@ -137,7 +154,7 @@ function loginCallback(response) {
 		}
 
 		// Redirect to auth page
-		window.location.href = "/auth";
+		window.location.href = "/map";
 	});
 }
 

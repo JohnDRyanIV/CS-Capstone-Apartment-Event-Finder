@@ -17,31 +17,55 @@
     </header>
 
 <!-- ── Mobile topbar (hidden on md+) ──────────────────────────────────────── -->
-<div id="topbar" class="d-flex d-md-none align-items-center flex-wrap gap-2 px-3 py-2">
+<div id="topbar" class="d-flex d-md-none align-items-center gap-2 px-3 py-2">
 
-    <div class="layer-toggle">
-        <button class="layer-btn active" data-layer="apartments">🟢 Apartments</button>
-        <button class="layer-btn" data-layer="events">🟠 Events</button>
+    <!-- Segmented layer toggle -->
+    <div class="layer-seg">
+        <button class="layer-seg-btn active" id="seg-apartments" data-layer="apartments">🟢 Apts</button>
+        <button class="layer-seg-btn" id="seg-events" data-layer="events">🟠 Events</button>
     </div>
 
-    <!-- Apartment filters (mobile) -->
-    <div id="apt-filters-mobile" class="d-flex align-items-center gap-2 border-start ps-3">
-        <label class="form-label mb-0 small fw-semibold">Max Rent</label>
-        <input type="range" class="form-range" id="priceRangeMobile" min="500" max="4000" step="50" value="4000" style="width:100px">
-        <input type="number" class="form-control form-control-sm" id="priceValueMobile" min="500" max="4000" step="50" value="4000" style="width:72px">
+    <!-- Apartment filters (mobile) — one line -->
+    <div id="apt-filters-mobile" class="mobile-filter-row">
+        <span class="mobile-filter-label">Rent</span>
+        <div class="price-range-sliders" style="flex:1;margin:0 4px">
+            <div class="price-range-track"></div>
+            <div class="price-range-fill" id="priceRangeFillMobile"></div>
+            <input type="range" id="priceMinMobile" min="500" max="4000" step="50" value="500">
+            <input type="range" id="priceRangeMobile" min="500" max="4000" step="50" value="4000">
+        </div>
+        <span id="priceValueDisplay">$4,000</span>
+        <input type="hidden" id="priceValueMobile">
     </div>
 
-    <!-- Event filters (mobile) -->
-    <div id="evt-filters-mobile" class="d-none align-items-center flex-wrap gap-2 border-start ps-3">
-        <div class="d-flex align-items-center gap-1">
-            <label class="form-label mb-0 small fw-semibold">From</label>
-            <input type="date" class="form-control form-control-sm" id="eventStartDateMobile" style="width:135px">
+    <!-- Event filters (mobile) — one line -->
+    <div id="evt-filters-mobile" class="mobile-filter-row d-none">
+        <div class="position-relative">
+            <button class="date-range-btn" id="dateRangeBtnMobile">📅 All Dates</button>
+            <div class="date-picker-popup" id="datePickerMobile">
+                <div class="cal-header">
+                    <button class="cal-nav" id="calPrevMobile">‹</button>
+                    <span class="cal-month-label" id="calMonthMobile"></span>
+                    <button class="cal-nav" id="calNextMobile">›</button>
+                </div>
+                <div class="cal-weekdays">
+                    <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                </div>
+                <div class="cal-grid" id="calGridMobile"></div>
+                <div class="cal-selection" id="calSelectionMobile">Select start date</div>
+                <div class="date-picker-actions">
+                    <button class="date-clear-btn" id="dateClearMobile">Clear</button>
+                    <button class="date-apply-btn" id="dateApplyMobile">Apply</button>
+                </div>
+                <input type="hidden" id="eventStartDateMobile">
+                <input type="hidden" id="eventEndDateMobile">
+            </div>
         </div>
-        <div class="d-flex align-items-center gap-1">
-            <label class="form-label mb-0 small fw-semibold">To</label>
-            <input type="date" class="form-control form-control-sm" id="eventEndDateMobile" style="width:135px">
+        <div class="custom-select-wrap" id="catFilterWrapMobile">
+            <button class="custom-select-btn" id="catFilterBtnMobile">All Categories</button>
+            <ul class="custom-select-list" id="catFilterListMobile"></ul>
         </div>
-        <div id="eventCategoryFiltersMobile" class="d-flex flex-wrap gap-2"></div>
+        <input type="hidden" id="eventCategoryFilterMobile">
     </div>
 </div>
 
@@ -50,28 +74,56 @@
 
     <!-- Desktop floating controls (hidden on mobile) -->
     <div id="desktop-controls" class="d-none d-md-flex flex-column gap-2">
-        <div class="layer-toggle vertical">
-            <button class="layer-btn active" data-layer="apartments">🟢 Apartments</button>
-            <button class="layer-btn" data-layer="events">🟠 Events</button>
+        <div class="layer-seg desktop-layer-seg">
+            <button class="layer-seg-btn active" data-layer="apartments">🟢 Apartments</button>
+            <button class="layer-seg-btn" data-layer="events">🟠 Events</button>
         </div>
 
         <div id="apt-filters-desktop" class="d-flex flex-column gap-1 pt-2 border-top">
-            <strong class="small">Apartment Filters</strong>
-            <label class="form-label mb-0 small">Max Rent</label>
-            <div class="d-flex align-items-center gap-2">
-                <input type="range" class="form-range" id="priceRange" min="500" max="4000" step="50" value="4000" style="width:140px">
-                <input type="number" class="form-control form-control-sm" id="priceValue" min="500" max="4000" step="50" value="4000" style="width:72px">
+            <strong class="small">Rent</strong>
+            <div class="price-range-wrap">
+                <div class="price-range-labels">
+                    <span id="priceMinDisplay">$500</span>
+                    <span id="priceMaxDisplay">$4,000</span>
+                </div>
+                <div class="price-range-sliders">
+                    <div class="price-range-track"></div>
+                    <div class="price-range-fill" id="priceRangeFill"></div>
+                    <input type="range" id="priceMin" min="500" max="4000" step="50" value="500">
+                    <input type="range" id="priceRange" min="500" max="4000" step="50" value="4000">
+                </div>
             </div>
+            <input type="hidden" id="priceValue">
         </div>
 
         <div id="evt-filters-desktop" class="d-none flex-column gap-1 pt-2 border-top">
             <strong class="small">Event Filters</strong>
-            <label class="form-label mb-0 small">Start Date</label>
-            <input type="date" class="form-control form-control-sm" id="eventStartDate">
-            <label class="form-label mb-0 small">End Date</label>
-            <input type="date" class="form-control form-control-sm" id="eventEndDate">
-            <strong class="small mt-1">Categories</strong>
-            <div id="eventCategoryFilters" class="d-flex flex-column gap-1 overflow-auto" style="max-height:160px"></div>
+            <div class="position-relative">
+                <button class="date-range-btn" id="dateRangeBtnDesktop">📅 All Dates</button>
+                <div class="date-picker-popup" id="datePickerDesktop">
+                    <div class="cal-header">
+                        <button class="cal-nav" id="calPrevDesktop">‹</button>
+                        <span class="cal-month-label" id="calMonthDesktop"></span>
+                        <button class="cal-nav" id="calNextDesktop">›</button>
+                    </div>
+                    <div class="cal-weekdays">
+                        <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                    </div>
+                    <div class="cal-grid" id="calGridDesktop"></div>
+                    <div class="cal-selection" id="calSelectionDesktop">Select start date</div>
+                    <div class="date-picker-actions">
+                        <button class="date-clear-btn" id="dateClearDesktop">Clear</button>
+                        <button class="date-apply-btn" id="dateApplyDesktop">Apply</button>
+                    </div>
+                    <input type="hidden" id="eventStartDate">
+                    <input type="hidden" id="eventEndDate">
+                </div>
+            </div>
+            <div class="custom-select-wrap" id="catFilterWrapDesktop">
+                <button class="custom-select-btn" id="catFilterBtnDesktop">All Categories</button>
+                <ul class="custom-select-list" id="catFilterListDesktop"></ul>
+            </div>
+            <input type="hidden" id="eventCategoryFilter">
         </div>
     </div>
 
@@ -79,12 +131,12 @@
 
     <!-- Sidebar -->
     <div id="sidebar">
+        <button id="sidebar-toggle" aria-label="Toggle sidebar">▲ Show List</button>
         <div id="sidebar-header" class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom flex-shrink-0">
             <div>
                 <h2 id="sidebar-title" class="mb-0">Apartments</h2>
                 <div id="sidebar-count" class="text-muted small"></div>
             </div>
-            <button id="sidebar-toggle" aria-label="Toggle sidebar">▼</button>
         </div>
         <div id="sidebar-list"></div>
     </div>

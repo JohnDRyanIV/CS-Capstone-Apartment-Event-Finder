@@ -100,6 +100,38 @@
   }
 
   /* ---- NAV TABS ---- */
+  .tab-nav-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .tab-nav-wrap::before,
+  .tab-nav-wrap::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 48px;
+    pointer-events: none;
+    z-index: 1;
+    transition: opacity 0.2s;
+  }
+  .tab-nav-wrap::before {
+    left: 0;
+    background: linear-gradient(to left, transparent, white);
+    opacity: 0;
+  }
+  .tab-nav-wrap::after {
+    right: 0;
+    background: linear-gradient(to right, transparent, white);
+    opacity: 1;
+  }
+  .tab-nav-wrap.at-start::before { opacity: 0; }
+  .tab-nav-wrap.at-end::after   { opacity: 0; }
+  .tab-nav-wrap.show-left::before { opacity: 1; }
+  @media (min-width: 700px) {
+    .tab-nav-wrap::before,
+    .tab-nav-wrap::after { display: none; }
+  }
   .tab-nav {
     background: white;
     border-bottom: 1px solid var(--border);
@@ -108,9 +140,7 @@
     gap: 0;
     overflow-x: auto;
     scrollbar-width: none;
-    position: sticky;
-    top: 0;
-    z-index: 100;
+    position: relative;
   }
   .tab-nav::-webkit-scrollbar { display: none; }
   .tab-btn {
@@ -578,7 +608,8 @@
   /* responsive */
   @media (max-width: 900px) {
     .hero { padding: 50px 30px 40px; }
-    .tab-nav { padding: 0 20px; }
+    .tab-nav { padding: 0 8px; }
+    .tab-btn { padding: 18px 16px; }
     .main-content { grid-template-columns: 1fr; padding: 40px 30px; gap: 40px; }
     .topic-cards { grid-template-columns: 1fr; }
     .card-grid { grid-template-columns: 1fr; }
@@ -610,6 +641,7 @@
 </div>
 
 <!-- NAV TABS -->
+<div class="tab-nav-wrap">
 <nav class="tab-nav">
   <button class="tab-btn active" onclick="showTab('home')">Overview</button>
   <button class="tab-btn" onclick="showTab('costs')">💸 Moving Costs</button>
@@ -618,6 +650,7 @@
   <button class="tab-btn" onclick="showTab('moving')">📦 Moving Day</button>
   <button class="tab-btn" onclick="showTab('settle')">🌆 Settling In</button>
 </nav>
+</div>
 
 <!-- MAIN CONTENT -->
 <div class="main-content">
@@ -1183,6 +1216,25 @@
     'moving': { btn: 4, page: 'page-moving', articles: 'articles-moving' },
     'settle': { btn: 5, page: 'page-settle', articles: 'articles-settle' },
   };
+
+  // Tab nav scroll fade indicators
+  (function() {
+    const wrap = document.querySelector('.tab-nav-wrap');
+    const nav  = document.querySelector('.tab-nav');
+    if (!wrap || !nav) return;
+
+    function updateFades() {
+      const atStart = nav.scrollLeft <= 2;
+      const atEnd   = nav.scrollLeft >= nav.scrollWidth - nav.clientWidth - 2;
+      wrap.classList.toggle('at-start', atStart);
+      wrap.classList.toggle('at-end',   atEnd);
+      wrap.classList.toggle('show-left', !atStart);
+    }
+
+    nav.addEventListener('scroll', updateFades, { passive: true });
+    window.addEventListener('resize', updateFades);
+    updateFades();
+  })();
 
   function showTab(id) {
     // Hide all pages & article groups

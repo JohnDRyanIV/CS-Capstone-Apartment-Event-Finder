@@ -133,8 +133,8 @@ body {
     white-space: nowrap;
 }
 
-.favorite-btn:hover { color: var(--terracotta); border-color: var(--terracotta); background: var(--light-terracotta, #faf0eb); }
-.favorite-btn.favorited { color: var(--terracotta); border-color: var(--terracotta); background: var(--light-terracotta, #faf0eb); }
+.favorite-btn:hover { color: var(--red); border-color: var(--red); background: #fdf0ee; }
+.favorite-btn.favorited { color: var(--red); border-color: var(--red); background: #fdf0ee; }
 
 /* ── Section title ─────────────────────────────────────────────────────────── */
 .section-title {

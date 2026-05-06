@@ -61,18 +61,18 @@ h1 {
 /* ── Remove button ─────────────────────────────────────────────────────────── */
 .remove-btn {
     background: none;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 6px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
     font-size: 12px;
-    color: #999;
+    font-weight: 600;
+    color: var(--muted);
     cursor: pointer;
     font-family: var(--font-serif);
-    transition: color 0.15s, border-color 0.15s;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
 
-.remove-btn:hover { color: var(--red); border-color: var(--red); }
-
+.remove-btn:hover { color: var(--red); border-color: var(--red); background: #fdf0ee; }
 /* ── Loading state ─────────────────────────────────────────────────────────── */
 #loading {
     text-align: center;

@@ -33,6 +33,12 @@ function getApartmentMinPrice(apt) {
     return prices.length === 0 ? null : Math.min(...prices);
 }
 
+function hasReadablePrice(apt) {
+    // Filter out "call for info" listings and outliers over $5,000
+    const min = getApartmentMinPrice(apt);
+    return min !== null && min <= 5000;
+}
+
 function normalizeDateString(value) {
     if (!value) return null;
     const parsed = new Date(value);
@@ -40,51 +46,79 @@ function normalizeDateString(value) {
 }
 
 function eventMatchesDateRange(event, startDate, endDate) {
-    const eventDate = normalizeDateString(event.event_date);
+    const eventDate = normalizeDateString(event.event_start_date || event.event_date);
     if (!eventDate) return true;
     if (startDate && eventDate < startDate) return false;
     if (endDate && eventDate > endDate) return false;
     return true;
 }
 
-function eventMatchesCategories(event, selectedCategories) {
-    if (selectedCategories.length === 0) return true;
+function eventMatchesCategory(event, selectedCategory) {
+    if (!selectedCategory || selectedCategory === "all") return true;
+    if (event.event_type) return event.event_type === selectedCategory;
     const eventCategories = Array.isArray(event.categories) ? event.categories : [];
-    return selectedCategories.some(cat => eventCategories.includes(cat));
+    return eventCategories.includes(selectedCategory);
 }
 
 function collectEventCategories(events) {
-    const categorySet = new Set();
+    const counts = {};
     events.forEach(ev => {
-        if (Array.isArray(ev.categories)) ev.categories.forEach(c => { if (c) categorySet.add(c); });
+        const cat = ev.event_type || (Array.isArray(ev.categories) && ev.categories[0]);
+        if (cat) counts[cat] = (counts[cat] || 0) + 1;
     });
-    return Array.from(categorySet).sort((a, b) => a.localeCompare(b));
+    return Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
 }
 
-function getSelectedEventCategories(containerId) {
-    return Array.from(document.querySelectorAll(`#${containerId} input:checked`)).map(i => i.value);
+function getSelectedEventCategory(selectId) {
+    const el = document.getElementById(selectId);
+    if (!el) return "all";
+    return el.value || "all";
 }
 
-function buildEventCategoryFilters(categories, containerId, horizontal = false) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    container.innerHTML = "";
+function buildEventCategoryFilters(categories, selectId, onSelect) {
+    // selectId is the hidden input id — derive btn/list/wrap ids from it
+    const suffix = selectId === "eventCategoryFilter" ? "Desktop" : "Mobile";
+    const btn    = document.getElementById(`catFilterBtn${suffix}`);
+    const list   = document.getElementById(`catFilterList${suffix}`);
+    const wrap   = document.getElementById(`catFilterWrap${suffix}`);
+    const hidden = document.getElementById(selectId);
+    if (!btn || !list || !wrap || !hidden) return;
+
+    // Build list items
+    list.innerHTML = "";
+    const allItem = document.createElement("li");
+    allItem.textContent = "All Categories";
+    allItem.dataset.value = "all";
+    allItem.classList.add("selected");
+    list.appendChild(allItem);
+
     categories.forEach(cat => {
-        const div = document.createElement("div");
-        div.className = horizontal ? "form-check form-check-inline mb-0" : "form-check";
-        const input = document.createElement("input");
-        input.type = "checkbox";
-        input.className = "form-check-input";
-        input.value = cat;
-        input.id = `${containerId}-${cat.replace(/\s+/g, "-")}`;
-        const label = document.createElement("label");
-        label.className = "form-check-label";
-        label.htmlFor = input.id;
-        label.textContent = cat;
-        div.appendChild(input);
-        div.appendChild(label);
-        container.appendChild(div);
+        const li = document.createElement("li");
+        li.textContent = cat;
+        li.dataset.value = cat;
+        list.appendChild(li);
     });
+
+    // Toggle open/close
+    btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        wrap.classList.toggle("open");
+    });
+
+    // Select item
+    list.addEventListener("click", (e) => {
+        const li = e.target.closest("li");
+        if (!li) return;
+        const val = li.dataset.value;
+        hidden.value = val === "all" ? "" : val;
+        btn.textContent = li.textContent;
+        list.querySelectorAll("li").forEach(l => l.classList.toggle("selected", l === li));
+        wrap.classList.remove("open");
+        if (onSelect) onSelect();
+    });
+
+    // Close on outside click
+    document.addEventListener("click", () => wrap.classList.remove("open"));
 }
 
 function isDefaultTime(isoStr) {
@@ -125,11 +159,17 @@ function isMobile() {
 
 // ── Active popup tracker ───────────────────────────────────────────────────────
 let activePopup = null;
+let popupFromSidebar = false;
 
-function openPopup(popup) {
+function openPopup(popup, fromSidebar = false) {
     if (activePopup) activePopup.remove();
     activePopup = popup;
-    popup.on("close", () => { activePopup = null; });
+    popupFromSidebar = fromSidebar;
+    popup.on("close", () => {
+        activePopup = null;
+        if (popupFromSidebar) expandOnMobile();
+        popupFromSidebar = false;
+    });
     popup.addTo(map);
 }
 
@@ -202,11 +242,47 @@ const sidebarCount = document.getElementById("sidebar-count");
 const sidebar      = document.getElementById("sidebar");
 const toggleBtn    = document.getElementById("sidebar-toggle");
 
-toggleBtn.addEventListener("click", () => {
+// Collapse sidebar immediately on mobile before anything loads
+if (isMobile()) {
+    sidebar.classList.add("collapsed");
+    toggleBtn.textContent = "▲ Show List";
+}
+
+// Desktop: only the toggle button collapses/expands
+// Mobile: the whole header is tappable
+function doToggle() {
+    const isCollapsed = sidebar.classList.contains("collapsed");
     sidebar.classList.toggle("collapsed");
-    // Let Mapbox know the canvas size changed
-    setTimeout(() => map.resize(), 320);
+    if (isMobile() && isCollapsed && activePopup) {
+        activePopup.remove();
+    }
+    if (isMobile()) {
+        toggleBtn.textContent = sidebar.classList.contains("collapsed") ? "▲ Show List" : "▼ Show Map";
+    }
+    setTimeout(() => map.resize(), 360);
+}
+
+toggleBtn.addEventListener("click", doToggle);
+
+document.getElementById("sidebar-header").addEventListener("click", () => {
+    if (isMobile()) doToggle();
 });
+
+function collapseOnMobile() {
+    if (isMobile() && !sidebar.classList.contains("collapsed")) {
+        sidebar.classList.add("collapsed");
+        toggleBtn.textContent = "▲ Show List";
+        setTimeout(() => map.resize(), 360);
+    }
+}
+
+function expandOnMobile() {
+    if (isMobile() && sidebar.classList.contains("collapsed")) {
+        sidebar.classList.remove("collapsed");
+        toggleBtn.textContent = "▼ Show Map";
+        setTimeout(() => map.resize(), 360);
+    }
+}
 
 function buildAptSidebarCard(apt) {
     const title   = apt.title || apt.address || "Apartment";
@@ -291,16 +367,14 @@ function buildEventSidebarCard(ev) {
     return card;
 }
 
-function populateSidebarApartments(apartments, maxPrice) {
+function populateSidebarApartments(apartments, maxPrice, minPrice = 0) {
     sidebarTitle.textContent = "Apartments";
     sidebarList.innerHTML = "";
 
     const filtered = apartments
         .filter(apt => apt.lat && apt.lon)
-        .filter(apt => {
-            const minPrice = getApartmentMinPrice(apt);
-            return minPrice === null || minPrice <= maxPrice;
-        });
+        .filter(hasReadablePrice)
+        .filter(apt => { const p = getApartmentMinPrice(apt); return p >= minPrice && p <= maxPrice; });
 
     sidebarCount.textContent = `${filtered.length} listing${filtered.length !== 1 ? "s" : ""}`;
 
@@ -319,7 +393,8 @@ function populateSidebarApartments(apartments, maxPrice) {
             const popup = new mapboxgl.Popup({ offset: 12, maxWidth: "320px" })
                 .setLngLat([apt.lon, apt.lat])
                 .setHTML(buildAptPopupHTML(apt));
-            openPopup(popup);
+            openPopup(popup, true);
+            collapseOnMobile();
         });
         sidebarList.appendChild(card);
     });
@@ -348,7 +423,8 @@ function populateSidebarEvents(events) {
             const popup = new mapboxgl.Popup({ offset: 12, maxWidth: "380px" })
                 .setLngLat([ev.longitude, ev.latitude])
                 .setDOMContent(buildEventCarouselNode(eventsAtLocation));
-            openPopup(popup);
+            openPopup(popup, true);
+            collapseOnMobile();
         });
         sidebarList.appendChild(card);
     });
@@ -419,15 +495,13 @@ function buildEventCardHTML(event) {
 }
 
 // ── GeoJSON builders ───────────────────────────────────────────────────────────
-function buildApartmentGeoJSON(apartments, maxPrice) {
+function buildApartmentGeoJSON(apartments, maxPrice, minPrice = 0) {
     return {
         type: "FeatureCollection",
         features: apartments
             .filter(apt => apt.lat && apt.lon)
-            .filter(apt => {
-                const minPrice = getApartmentMinPrice(apt);
-                return minPrice === null || minPrice <= maxPrice;
-            })
+            .filter(hasReadablePrice)
+            .filter(apt => { const p = getApartmentMinPrice(apt); return p >= minPrice && p <= maxPrice; })
             .map(apt => ({
                 type: "Feature",
                 geometry: { type: "Point", coordinates: [apt.lon, apt.lat] },
@@ -560,13 +634,23 @@ function updatePinSize() {
     });
 }
 
+function updateSidebarMaxHeight() {
+    const topbar = document.getElementById("topbar");
+    const topbarH = (isMobile() && topbar) ? topbar.getBoundingClientRect().height : 0;
+    const navbarH = 56;
+    document.documentElement.style.setProperty(
+        "--sidebar-max-height",
+        `calc(100vh - ${navbarH}px - ${topbarH}px)`
+    );
+}
+
 let wasMobile = isMobile();
 window.addEventListener("resize", () => {
     updatePinSize();
+    updateSidebarMaxHeight();
     const nowMobile = isMobile();
     if (nowMobile !== wasMobile) {
         wasMobile = nowMobile;
-        // Trigger sidebar rebuild so card format updates
         window.dispatchEvent(new Event("breakpointchange"));
     }
 });
@@ -594,28 +678,87 @@ map.on("load", () => {
         const eventStartDateMob  = document.getElementById("eventStartDateMobile");
         const eventEndDateMob    = document.getElementById("eventEndDateMobile");
 
+        // ── Calculate dynamic price range from data ─────────────────────────
+        const pricedApartments = apartments.filter(hasReadablePrice);
+        const allPrices = pricedApartments.map(getApartmentMinPrice).filter(v => v !== null);
+        const minRent = allPrices.length > 0 ? Math.floor(Math.min(...allPrices) / 50) * 50 : 500;
+        const maxRent = allPrices.length > 0 ? Math.ceil(Math.max(...allPrices) / 50) * 50 : 4000;
+
+        [priceRange, priceRangeMobile].forEach(el => {
+            el.min = minRent; el.max = maxRent; el.step = 50; el.value = maxRent;
+        });
+        // Set min sliders
+        [document.getElementById("priceMin"), document.getElementById("priceMinMobile")].forEach(el => {
+            if (el) { el.min = minRent; el.max = maxRent; el.step = 50; el.value = minRent; }
+        });
+
         // ── Sync desktop & mobile price sliders ─────────────────────────────
-        function syncPrice(value) {
-            priceRange.value       = value;
-            priceValue.value       = value;
-            priceRangeMobile.value = value;
-            priceValueMobile.value = value;
-            map.getSource("apartments").setData(buildApartmentGeoJSON(apartments, Number(value)));
-            populateSidebarApartments(apartments, Number(value));
+        const priceValueDisplay  = document.getElementById("priceValueDisplay");
+        const priceMinEl         = document.getElementById("priceMin");
+        const priceMinMobileEl   = document.getElementById("priceMinMobile");
+        const priceMinDisplay    = document.getElementById("priceMinDisplay");
+        const priceMaxDisplay    = document.getElementById("priceMaxDisplay");
+        const priceRangeFill     = document.getElementById("priceRangeFill");
+        const priceRangeFillMob  = document.getElementById("priceRangeFillMobile");
+        const MIN_GAP = 100;
+
+        let currentMin = minRent;
+        let currentMax = maxRent;
+
+        function updateFill(fillEl, minVal, maxVal, sliderMin, sliderMax) {
+            if (!fillEl) return;
+            const pctMin = (minVal - sliderMin) / (sliderMax - sliderMin) * 100;
+            const pctMax = (maxVal - sliderMin) / (sliderMax - sliderMin) * 100;
+            fillEl.style.left  = pctMin + "%";
+            fillEl.style.width = (pctMax - pctMin) + "%";
         }
 
-        priceRange.addEventListener("input",         () => syncPrice(priceRange.value));
-        priceRangeMobile.addEventListener("input",   () => syncPrice(priceRangeMobile.value));
-        priceValue.addEventListener("change",        () => syncPrice(Math.max(500, Math.min(4000, Number(priceValue.value)))));
-        priceValueMobile.addEventListener("change",  () => syncPrice(Math.max(500, Math.min(4000, Number(priceValueMobile.value)))));
+        function syncPrice(newMin, newMax) {
+            // Enforce min gap
+            if (newMax - newMin < MIN_GAP) {
+                if (newMin !== currentMin) newMax = newMin + MIN_GAP;
+                else newMin = newMax - MIN_GAP;
+            }
+            newMin = Math.max(minRent, newMin);
+            newMax = Math.min(maxRent, newMax);
+            currentMin = newMin;
+            currentMax = newMax;
+
+            // Sync all sliders
+            [priceMinEl, priceMinMobileEl].forEach(el => { if (el) el.value = newMin; });
+            [priceRange, priceRangeMobile].forEach(el => { if (el) el.value = newMax; });
+
+            // Update labels
+            if (priceMinDisplay) priceMinDisplay.textContent = `$${newMin.toLocaleString()}`;
+            if (priceMaxDisplay) priceMaxDisplay.textContent = `$${newMax.toLocaleString()}`;
+            if (priceValueDisplay) priceValueDisplay.textContent = `$${newMax.toLocaleString()}`;
+
+            // Update fill tracks
+            updateFill(priceRangeFill,    newMin, newMax, minRent, maxRent);
+            updateFill(priceRangeFillMob, newMin, newMax, minRent, maxRent);
+
+            map.getSource("apartments").setData(buildApartmentGeoJSON(apartments, newMax, newMin));
+            populateSidebarApartments(apartments, newMax, newMin);
+        }
+
+        if (priceMinEl) priceMinEl.addEventListener("input", () =>
+            syncPrice(Number(priceMinEl.value), currentMax));
+        if (priceMinMobileEl) priceMinMobileEl.addEventListener("input", () =>
+            syncPrice(Number(priceMinMobileEl.value), currentMax));
+        priceRange.addEventListener("input", () =>
+            syncPrice(currentMin, Number(priceRange.value)));
+        priceRangeMobile.addEventListener("input", () =>
+            syncPrice(currentMin, Number(priceRangeMobile.value)));
 
         // ── Apartments layer ─────────────────────────────────────────────────
         // Build lookup so map pin clicks can generate fresh popups with correct fav state
         const aptById = {};
         apartments.forEach(apt => { if (apt.listing_id) aptById[apt.listing_id] = apt; });
 
-        addClusteredLayer("apartments", buildApartmentGeoJSON(apartments, 4000), "#5a7a5c", "#4a6a4c", "#3a5a3c");
-        populateSidebarApartments(apartments, 4000);
+        addClusteredLayer("apartments", buildApartmentGeoJSON(apartments, maxRent, minRent), "#5a7a5c", "#4a6a4c", "#3a5a3c");
+        populateSidebarApartments(apartments, maxRent, minRent);
+        // Draw initial fill
+        syncPrice(minRent, maxRent);
 
         map.on("click", "apartments-unclustered-point", e => {
             const coords = e.features[0].geometry.coordinates.slice();
@@ -625,36 +768,36 @@ map.on("load", () => {
                 coords[0] += e.lngLat.lng > coords[0] ? 360 : -360;
             openPopup(new mapboxgl.Popup({ offset: 12, maxWidth: "320px" })
                 .setLngLat(coords)
-                .setHTML(apt ? buildAptPopupHTML(apt) : "<div class='apt-popup'><h3>Apartment</h3></div>"));
+                .setHTML(apt ? buildAptPopupHTML(apt) : "<div class='apt-popup'><h3>Apartment</h3></div>"), false);
         });
 
         // ── Event categories ─────────────────────────────────────────────────
         const allCategories = collectEventCategories(events);
-        buildEventCategoryFilters(allCategories, "eventCategoryFilters", false);
-        buildEventCategoryFilters(allCategories, "eventCategoryFiltersMobile", true);
+        buildEventCategoryFilters(allCategories, "eventCategoryFilter", updateEventLayer);
+        buildEventCategoryFilters(allCategories, "eventCategoryFilterMobile", updateEventLayer);
 
         // ── Events layer ─────────────────────────────────────────────────────
         function getActiveEventFilters() {
             const mobile = isMobile();
             return {
-                startDate:  (mobile ? eventStartDateMob : eventStartDate).value || null,
-                endDate:    (mobile ? eventEndDateMob   : eventEndDate).value   || null,
-                categories: getSelectedEventCategories(mobile ? "eventCategoryFiltersMobile" : "eventCategoryFilters")
+                startDate: (mobile ? eventStartDateMob : eventStartDate).value || null,
+                endDate:   (mobile ? eventEndDateMob   : eventEndDate).value   || null,
+                category:  getSelectedEventCategory(mobile ? "eventCategoryFilterMobile" : "eventCategoryFilter")
             };
         }
 
         function getActiveLayer() {
-            const active = document.querySelector(".layer-btn.active");
+            const active = document.querySelector(".layer-seg-btn.active");
             return active ? active.dataset.layer : "apartments";
         }
 
         function updateEventLayer() {
-            const { startDate, endDate, categories } = getActiveEventFilters();
+            const { startDate, endDate, category } = getActiveEventFilters();
             const filteredEvents = events.filter(ev => {
                 if (ev.latitude == null || ev.longitude == null) return false;
                 if (!isEventInFuture(ev)) return false;
                 if (!eventMatchesDateRange(ev, startDate, endDate)) return false;
-                if (!eventMatchesCategories(ev, categories)) return false;
+                if (!eventMatchesCategory(ev, category)) return false;
                 return true;
             });
             eventGroups = groupByCoord(filteredEvents);
@@ -662,10 +805,194 @@ map.on("load", () => {
             populateSidebarEvents(filteredEvents);
         }
 
-        [eventStartDate, eventEndDate].forEach(el => el.addEventListener("change", updateEventLayer));
-        [eventStartDateMob, eventEndDateMob].forEach(el => el.addEventListener("change", updateEventLayer));
-        document.getElementById("eventCategoryFilters").addEventListener("change", updateEventLayer);
-        document.getElementById("eventCategoryFiltersMobile").addEventListener("change", updateEventLayer);
+        // ── Calendar date range picker ──────────────────────────────────────────
+        function setupCalendarPicker(btnId, popupId, clearId, applyId, startId, endId, gridId, monthLabelId, prevId, nextId, selectionId) {
+            const btn       = document.getElementById(btnId);
+            const popup     = document.getElementById(popupId);
+            const clearBtn  = document.getElementById(clearId);
+            const applyBtn  = document.getElementById(applyId);
+            const startEl   = document.getElementById(startId);
+            const endEl     = document.getElementById(endId);
+            const grid      = document.getElementById(gridId);
+            const monthLabel= document.getElementById(monthLabelId);
+            const prevBtn   = document.getElementById(prevId);
+            const nextBtn   = document.getElementById(nextId);
+            const selection = document.getElementById(selectionId);
+
+            const today   = new Date(); today.setHours(0,0,0,0);
+            const maxDate = new Date(today); maxDate.setDate(maxDate.getDate() + 30);
+
+            let viewYear  = today.getFullYear();
+            let viewMonth = today.getMonth();
+            let startDate = null;
+            let endDate   = null;
+            let selecting = "start"; // "start" or "end"
+
+            function toYMD(d) {
+                return d.toISOString().split("T")[0];
+            }
+
+            function fromYMD(s) {
+                if (!s) return null;
+                const [y,m,d] = s.split("-").map(Number);
+                return new Date(y, m-1, d);
+            }
+
+            function updateBtnLabel() {
+                const s = startEl.value, e = endEl.value;
+                if (!s && !e) {
+                    btn.textContent = "📅 All Dates";
+                    btn.classList.remove("active");
+                } else {
+                    const fmt = d => fromYMD(d).toLocaleDateString("en-US", { month:"short", day:"numeric" });
+                    btn.textContent = s && e ? `📅 ${fmt(s)} – ${fmt(e)}` : s ? `📅 From ${fmt(s)}` : `📅 Until ${fmt(e)}`;
+                    btn.classList.add("active");
+                }
+            }
+
+            function renderCalendar() {
+                const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+                const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+                const monthName = new Date(viewYear, viewMonth).toLocaleString("en-US", { month:"long", year:"numeric" });
+                monthLabel.textContent = monthName;
+
+                // Disable prev if current month is today's month
+                const todayMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                const viewingMonth = new Date(viewYear, viewMonth, 1);
+                prevBtn.disabled = viewingMonth <= todayMonth;
+
+                // Disable next if we'd go past maxDate's month
+                const maxMonth = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+                nextBtn.disabled = viewingMonth >= maxMonth;
+
+                grid.innerHTML = "";
+
+                // Empty cells before first day
+                for (let i = 0; i < firstDay; i++) {
+                    const empty = document.createElement("div");
+                    empty.className = "cal-day cal-day-empty";
+                    grid.appendChild(empty);
+                }
+
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const date = new Date(viewYear, viewMonth, d);
+                    const cell = document.createElement("div");
+                    cell.textContent = d;
+                    cell.className = "cal-day";
+
+                    const disabled = date < today || date > maxDate;
+                    const isToday  = toYMD(date) === toYMD(today);
+                    const isStart  = startDate && toYMD(date) === toYMD(startDate);
+                    const isEnd    = endDate   && toYMD(date) === toYMD(endDate);
+                    const inRange  = startDate && endDate && date > startDate && date < endDate;
+
+                    if (disabled) { cell.classList.add("cal-day-disabled"); }
+                    if (isToday)  { cell.classList.add("cal-day-today"); }
+                    if (isStart)  { cell.classList.add("cal-day-start"); }
+                    if (isEnd)    { cell.classList.add("cal-day-end"); }
+                    if (inRange)  { cell.classList.add("cal-day-in-range"); }
+
+                    if (!disabled) {
+                        cell.addEventListener("click", (e) => { e.stopPropagation(); handleDayClick(date); });
+                    }
+
+                    grid.appendChild(cell);
+                }
+
+                // Update selection hint
+                if (!startDate && !endDate) {
+                    selection.textContent = "Select start date";
+                } else if (startDate && !endDate) {
+                    selection.textContent = `Start: ${startDate.toLocaleDateString("en-US", {month:"short",day:"numeric"})} — select end date`;
+                } else {
+                    selection.textContent = `${startDate.toLocaleDateString("en-US",{month:"short",day:"numeric"})} – ${endDate.toLocaleDateString("en-US",{month:"short",day:"numeric"})}`;
+                }
+            }
+
+            function handleDayClick(date) {
+                if (selecting === "start") {
+                    startDate = date;
+                    endDate = null;
+                    startEl.value = toYMD(date);
+                    endEl.value = "";
+                    selecting = "end";
+                } else {
+                    if (date < startDate) {
+                        // Clicked before start — reset and use as new start
+                        startDate = date;
+                        endDate = null;
+                        startEl.value = toYMD(date);
+                        endEl.value = "";
+                    } else {
+                        endDate = date;
+                        endEl.value = toYMD(date);
+                        selecting = "start";
+                    }
+                }
+                renderCalendar();
+            }
+
+            prevBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                viewMonth--;
+                if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+                renderCalendar();
+            });
+
+            nextBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                viewMonth++;
+                if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+                renderCalendar();
+            });
+
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                popup.classList.toggle("open");
+                if (popup.classList.contains("open")) {
+                    renderCalendar();
+                    // On mobile, position popup below the topbar
+                    if (window.innerWidth < 768) {
+                        const topbar = document.getElementById("topbar");
+                        const topbarBottom = topbar ? topbar.getBoundingClientRect().bottom : 56;
+                        popup.style.top = (topbarBottom + 4) + "px";
+                    }
+                }
+            });
+
+            clearBtn.addEventListener("click", (e) => { e.stopPropagation();
+                startDate = null; endDate = null; selecting = "start";
+                startEl.value = ""; endEl.value = "";
+                updateBtnLabel();
+                popup.classList.remove("open");
+                updateEventLayer();
+            });
+
+            applyBtn.addEventListener("click", (e) => { e.stopPropagation();
+                updateBtnLabel();
+                popup.classList.remove("open");
+                updateEventLayer();
+            });
+
+            document.addEventListener("click", (e) => {
+                if (!popup.contains(e.target) && e.target !== btn) {
+                    popup.classList.remove("open");
+                }
+            });
+        }
+
+        setupCalendarPicker(
+            "dateRangeBtnDesktop", "datePickerDesktop", "dateClearDesktop", "dateApplyDesktop",
+            "eventStartDate", "eventEndDate",
+            "calGridDesktop", "calMonthDesktop", "calPrevDesktop", "calNextDesktop", "calSelectionDesktop"
+        );
+        setupCalendarPicker(
+            "dateRangeBtnMobile", "datePickerMobile", "dateClearMobile", "dateApplyMobile",
+            "eventStartDateMobile", "eventEndDateMobile",
+            "calGridMobile", "calMonthMobile", "calPrevMobile", "calNextMobile", "calSelectionMobile"
+        );
+
+        // Category filter changes handled inside buildEventCategoryFilters
 
         const initialFilteredEvents = events.filter(ev => ev.latitude != null && ev.longitude != null && isEventInFuture(ev));
         eventGroups = groupByCoord(initialFilteredEvents);
@@ -680,7 +1007,7 @@ map.on("load", () => {
                 coords[0] += e.lngLat.lng > coords[0] ? 360 : -360;
             const eventsAtLocation = eventGroups[coordKey] || [];
             openPopup(new mapboxgl.Popup({ offset: 12, maxWidth: "380px" })
-                .setLngLat(coords).setDOMContent(buildEventCarouselNode(eventsAtLocation)));
+                .setLngLat(coords).setDOMContent(buildEventCarouselNode(eventsAtLocation)), false);
         });
 
         // ── Layer toggle (shared radio buttons across desktop + mobile) ──────
@@ -703,31 +1030,50 @@ map.on("load", () => {
             evtFiltersMobile.classList.toggle("d-flex",  !showApts);
 
             if (showApts) {
-                populateSidebarApartments(apartments, Number(priceRange.value));
+                populateSidebarApartments(apartments, currentMax, currentMin);
             } else {
                 updateEventLayer();
             }
         }
 
-        // Layer toggle buttons
-        document.querySelectorAll(".layer-btn").forEach(btn => {
+        // All layer toggle buttons (desktop + mobile both use .layer-seg-btn)
+        const sidebarToggleBtn = document.getElementById("sidebar-toggle");
+        function updateSidebarToggleColor(layer) {
+            if (sidebarToggleBtn) {
+                sidebarToggleBtn.classList.toggle("apt-active", layer === "apartments");
+                sidebarToggleBtn.classList.toggle("evt-active", layer === "events");
+            }
+            sidebar.classList.toggle("evt-active", layer === "events");
+        }
+
+        document.querySelectorAll(".layer-seg-btn").forEach(btn => {
             btn.addEventListener("click", () => {
                 const layer = btn.dataset.layer;
-                document.querySelectorAll(".layer-btn").forEach(b => {
-                    b.classList.toggle("active", b.dataset.layer === layer);
-                });
+                document.querySelectorAll(".layer-seg-btn").forEach(b =>
+                    b.classList.toggle("active", b.dataset.layer === layer)
+                );
+                updateSidebarToggleColor(layer);
                 updateVisibleLayer(layer);
             });
         });
+        updateSidebarToggleColor("apartments");
 
         // Fetch favorites then rebuild cards so heart state is correct from the start
-        fetchFavorites().then(() => updateVisibleLayer("apartments"));
+        updateSidebarMaxHeight();
+        fetchFavorites().then(() => {
+            // Rebuild cards with correct fav state but don't override
+            // whatever layer the user may have already switched to
+            updateVisibleLayer(getActiveLayer());
+            if (isMobile()) {
+                map.resize();
+            }
+        });
 
         // Rebuild cards when crossing mobile/desktop breakpoint
         window.addEventListener("breakpointchange", () => {
             const currentLayer = getActiveLayer();
             if (currentLayer === "apartments") {
-                populateSidebarApartments(apartments, Number(priceRange.value));
+                populateSidebarApartments(apartments, currentMax, currentMin);
             } else {
                 updateEventLayer();
             }
