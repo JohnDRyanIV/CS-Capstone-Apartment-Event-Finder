@@ -278,7 +278,7 @@ function buildEventSidebarCard(ev) {
         ? `<p class="evt-desc">${escapeHtml(desc.length > 100 ? desc.slice(0, 100) + "…" : desc)}</p>`
         : "";
 
-    const cta = link ? `<a class="cta" href="${escapeHtml(link)}" target="_blank">View Event</a>` : "";
+    const cta = link ? `<a class="cta cta-event" href="${escapeHtml(link)}" target="_blank">View Event</a>` : "";
 
     const favBtn = buildFavBtnHTML(ev.id, "event");
     const footer = `<div class="card-footer-row">${cta}${favBtn}</div>`;
@@ -411,7 +411,7 @@ function buildEventCardHTML(event) {
         ? `<p class="evt-desc">${escapeHtml(desc.length > 120 ? desc.slice(0, 120) + "…" : desc)}</p>`
         : "";
 
-    const cta = link ? `<a class="cta" href="${escapeHtml(link)}" target="_blank">View Event</a>` : "";
+    const cta = link ? `<a class="cta cta-event" href="${escapeHtml(link)}" target="_blank">View Event</a>` : "";
     const favBtn = buildFavBtnHTML(event.id, "event");
     const footer = `<div class="card-footer-row">${cta}${favBtn}</div>`;
 
@@ -614,7 +614,7 @@ map.on("load", () => {
         const aptById = {};
         apartments.forEach(apt => { if (apt.listing_id) aptById[apt.listing_id] = apt; });
 
-        addClusteredLayer("apartments", buildApartmentGeoJSON(apartments, 4000), "#3B82F6", "#2563EB", "#1E3A8A");
+        addClusteredLayer("apartments", buildApartmentGeoJSON(apartments, 4000), "#5a7a5c", "#4a6a4c", "#3a5a3c");
         populateSidebarApartments(apartments, 4000);
 
         map.on("click", "apartments-unclustered-point", e => {
@@ -669,7 +669,7 @@ map.on("load", () => {
 
         const initialFilteredEvents = events.filter(ev => ev.latitude != null && ev.longitude != null && isEventInFuture(ev));
         eventGroups = groupByCoord(initialFilteredEvents);
-        addClusteredLayer("events", buildEventGeoJSON(initialFilteredEvents), "#EF4444", "#DC2626", "#991B1B");
+        addClusteredLayer("events", buildEventGeoJSON(initialFilteredEvents), "#c4623a", "#a8522e", "#8a4224");
         setLayerGroupVisibility("events", false);
         updatePinSize();
 

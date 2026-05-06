@@ -64,7 +64,7 @@ function buildAptCard(apt) {
         rentBlock += `</ul></div>`;
     }
 
-    const cta = link ? `<a class="cta" href="${escapeHtml(link)}" target="_blank">View on Apartments.com</a>` : "";
+    const cta = link ? `<a class="cta" href="${escapeHtml(link)}" target="_blank">View Apartment</a>` : "";
 
     const col = document.createElement("div");
     col.className = "col";
@@ -100,7 +100,7 @@ function buildEventCard(ev) {
         ? `<p style="font-size:13px;color:#666;margin:0 0 8px">${escapeHtml(desc.length > 120 ? desc.slice(0, 120) + "…" : desc)}</p>`
         : "";
 
-    const cta = link ? `<a class="cta" href="${escapeHtml(link)}" target="_blank">View on Catch Des Moines</a>` : "";
+    const cta = link ? `<a class="cta cta-event" href="${escapeHtml(link)}" target="_blank">View Event</a>` : "";
 
     const col = document.createElement("div");
     col.className = "col";

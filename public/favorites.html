@@ -12,21 +12,23 @@
 <body>
     <header>{% include "navbar.html" %}</header>
 
-    <div class="container py-4">
-        <h1>My Favorites</h1>
-        <p class="text-muted small">Saved apartments and events. Items that are no longer available are automatically hidden.</p>
+    <div class="page-scroll">
+        <div class="container py-4">
+            <h1>My Favorites</h1>
+            <p class="text-muted small">Saved apartments and events. Items that are no longer available are automatically hidden.</p>
 
-        <div id="loading">Loading your favorites...</div>
+            <div id="loading">Loading your favorites...</div>
 
-        <div id="content" style="display:none">
-            <div id="apartments-section">
-                <div class="section-title">🔵 Apartments</div>
-                <div id="apartments-grid" class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3"></div>
-            </div>
+            <div id="content" style="display:none">
+                <div id="apartments-section">
+                    <div class="section-title">🟢 Apartments</div>
+                    <div id="apartments-grid" class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3"></div>
+                </div>
 
-            <div id="events-section">
-                <div class="section-title">🔴 Events</div>
-                <div id="events-grid" class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3"></div>
+                <div id="events-section">
+                    <div class="section-title">🟠 Events</div>
+                    <div id="events-grid" class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3"></div>
+                </div>
             </div>
         </div>
     </div>

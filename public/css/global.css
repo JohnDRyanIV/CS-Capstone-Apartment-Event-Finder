@@ -1,24 +1,26 @@
 /* ══════════════════════════════════════════════════════════════════════════════
    global.css — shared variables, typography, and components
-   Included on every page.
    ══════════════════════════════════════════════════════════════════════════════ */
 
-/* ── Variables ─────────────────────────────────────────────────────────────── */
 :root {
-    --cream:      #f7f6f3;
-    --warm-white: #fdfcf9;
-    --ink:        #1a1a1a;
-    --muted:      #888;
-    --border:     #e0ddd8;
-    --blue:       #2c5f9e;
-    --blue-light: #d6e4f7;
-    --blue-hover: #bdd4ef;
-    --red:        #c0392b;
-    --font-serif: 'Source Serif 4', Georgia, serif;
+    --cream:        #fdf8f5;
+    --warm-white:   #fffcfa;
+    --ink:          #2d1a20;
+    --muted:        #9a8a8e;
+    --border:       #ecddd8;
+    --blue:         #5a7a5c;
+    --blue-light:   #e8f0e4;
+    --blue-hover:   #d4e4d0;
+    --red:          #c0392b;
+    --sage:         #5a7a5c;
+    --gold:         #d4a843;
+    --terracotta:   #c4623a;
+    --dusty-blue:   #4a6b8a;
+    --font-serif:   'Source Serif 4', Georgia, serif;
     --font-display: 'Lora', Georgia, serif;
+    --font-mono:    'DM Mono', 'Courier New', monospace;
 }
 
-/* ── Base ──────────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 
 body {
@@ -28,17 +30,17 @@ body {
     color: var(--ink);
 }
 
-/* ── Badge items (address, date, phone chips) ──────────────────────────────── */
+/* ── Badge items ───────────────────────────────────────────────────────────── */
 .badge-item {
     display: inline-flex;
     align-items: flex-start;
     gap: 5px;
-    background: var(--cream);
+    background: var(--warm-white);
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 20px;
     padding: 3px 10px;
     font-size: 11.5px;
-    color: #555;
+    color: #6b5055;
     white-space: normal;
     word-break: break-word;
     overflow-wrap: anywhere;
@@ -50,7 +52,16 @@ body {
     margin-top: 2px;
 }
 
-/* ── CTA link button ───────────────────────────────────────────────────────── */
+/* ── Eyebrow label ─────────────────────────────────────────────────────────── */
+.eyebrow {
+    font-family: var(--font-mono, monospace);
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--blue);
+}
+
+/* ── CTA button ────────────────────────────────────────────────────────────── */
 .cta {
     display: inline-block;
     background: var(--blue-light);
@@ -59,14 +70,14 @@ body {
     font-size: 12px;
     font-weight: 600;
     text-decoration: none;
-    padding: 6px 14px;
-    border-radius: 8px;
+    padding: 6px 16px;
+    border-radius: 20px;
     transition: background 0.15s;
 }
 
 .cta:hover { background: var(--blue-hover); }
 
-/* ── Card footer row (cta + favorite btn) ──────────────────────────────────── */
+/* ── Card footer row ───────────────────────────────────────────────────────── */
 .card-footer-row {
     display: flex;
     align-items: stretch;
@@ -87,12 +98,12 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-color: #c8c4be;
+    border-color: var(--border);
 }
 
 .card-footer-row .cta::after { content: none; }
 
-/* ── Card header row (title + favorite btn) ────────────────────────────────── */
+/* ── Card header row ───────────────────────────────────────────────────────── */
 .card-header-row {
     display: flex;
     align-items: flex-start;
@@ -101,10 +112,7 @@ body {
     margin-bottom: 10px;
 }
 
-.card-header-row h3 {
-    margin: 0;
-    flex: 1;
-}
+.card-header-row h3 { margin: 0; flex: 1; }
 
 /* ── Favorite button ───────────────────────────────────────────────────────── */
 .favorite-btn {
@@ -113,7 +121,7 @@ body {
     gap: 5px;
     background: none;
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 20px;
     cursor: pointer;
     font-size: 13px;
     font-family: var(--font-serif);
@@ -125,19 +133,10 @@ body {
     white-space: nowrap;
 }
 
-.favorite-btn:hover {
-    color: var(--red);
-    border-color: var(--red);
-    background: #fdf0ee;
-}
+.favorite-btn:hover { color: var(--terracotta); border-color: var(--terracotta); background: var(--light-terracotta, #faf0eb); }
+.favorite-btn.favorited { color: var(--terracotta); border-color: var(--terracotta); background: var(--light-terracotta, #faf0eb); }
 
-.favorite-btn.favorited {
-    color: var(--red);
-    border-color: var(--red);
-    background: #fdf0ee;
-}
-
-/* ── Section title (used on favorites page) ────────────────────────────────── */
+/* ── Section title ─────────────────────────────────────────────────────────── */
 .section-title {
     font-family: var(--font-display);
     font-size: 20px;
@@ -151,7 +150,15 @@ body {
 /* ── Empty state ───────────────────────────────────────────────────────────── */
 .empty-state {
     text-align: center;
-    color: #aaa;
+    color: var(--muted);
     font-size: 14px;
     padding: 40px 0;
 }
+
+/* ── Event CTA (terracotta) ────────────────────────────────────────────────── */
+.cta-event {
+    background: var(--light-terracotta, #faf0eb);
+    color: var(--terracotta, #c4623a);
+}
+
+.cta-event:hover { background: #f5e0d4; }

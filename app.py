@@ -46,14 +46,7 @@ app = Flask(
 )
 
 flask_bcrypt = Bcrypt(app)
-
-_api_errors = {
-    'DatabaseWakingUpError': {
-        'message': 'Database is waking up. Try again soon.',
-        'status': 503
-    }
-}
-api = Api(app, errors=_api_errors)
+api          = Api(app)
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
@@ -195,7 +188,7 @@ def get_user_from_session(cookie):
             return "expired"
 
         user = cursor.execute(
-            """SELECT display_name, last_login FROM Users
+            """SELECT last_login FROM Users
                WHERE userid = (SELECT userid FROM Sessions WHERE sessionid = ?)""",
             (session_id,),
         ).fetchone()
@@ -215,20 +208,16 @@ class Register(Resource):
     def post(self):
         data = request.get_json()
 
-        for key in ["username", "password", "displayName"]:
+        for key in ["username", "password"]:
             if key not in data:
                 return {"message": f"Missing required field: {key}"}, 400
 
-        username     = data.get("username")
-        password     = data.get("password")
-        display_name = data.get("displayName")
+        username = data.get("username")
+        password = data.get("password")
 
         success, message = validate_password(password)
         if not success:
             return {"message": message}, 400
-
-        if not display_name:
-            return {"message": "Display name cannot be empty"}, 400
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -241,8 +230,8 @@ class Register(Resource):
 
             try:
                 cursor.execute(
-                    "INSERT INTO Users (username, password, display_name) VALUES (?, ?, ?)",
-                    (username, hashed_password, display_name),
+                    "INSERT INTO Users (username, password) VALUES (?, ?)",
+                    (username, hashed_password),
                 )
                 cursor.commit()
             except pyodbc.Error:
@@ -250,7 +239,7 @@ class Register(Resource):
             finally:
                 cursor.close()
 
-            return {"message": "User created successfully", "displayName": display_name}, 201
+            return {"message": "User created successfully", "displayName": username}, 201
 
 
 @addResource("/login")
@@ -283,7 +272,7 @@ class Login(Resource):
 
             response = make_response(
                 {
-                    "displayName": user.display_name,
+                    "displayName": username,
                     "lastLogin": (user.last_login or user.create_date).isoformat(),
                 },
                 200,
@@ -330,7 +319,7 @@ class AuthEndpoint(Resource):
             response.delete_cookie("sessionID")
             return response
         return make_response(
-            render_template("auth.html", name=user.display_name, show_logout_button=True)
+            render_template("auth.html", show_logout_button=True)
         )
 
 

@@ -1,15 +1,12 @@
-/* ══════════════════════════════════════════════════════════════════════════════
-   signin.css — styles specific to the sign in / register page
-   Requires: global.css
-   ══════════════════════════════════════════════════════════════════════════════ */
+/* signin.css */
 
-/* ── Page layout ───────────────────────────────────────────────────────────── */
 .page-wrap {
     min-height: calc(100vh - 56px);
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 40px 16px;
+    background: var(--cream);
 }
 
 .auth-container {
@@ -17,7 +14,6 @@
     max-width: 440px;
 }
 
-/* ── Header ────────────────────────────────────────────────────────────────── */
 .auth-header {
     text-align: center;
     margin-bottom: 36px;
@@ -25,11 +21,12 @@
 
 .auth-header h1 {
     font-family: var(--font-display);
-    font-size: 32px;
+    font-size: 36px;
     font-weight: 700;
     color: var(--ink);
     margin: 0 0 8px;
     letter-spacing: -0.5px;
+    line-height: 1.1;
 }
 
 .auth-header p {
@@ -39,11 +36,11 @@
     font-style: italic;
 }
 
-/* ── Tab switcher ──────────────────────────────────────────────────────────── */
+/* Tab switcher */
 .auth-tabs {
     display: flex;
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 20px;
     overflow: hidden;
     margin-bottom: 28px;
     background: var(--warm-white);
@@ -64,35 +61,34 @@
 }
 
 .auth-tab.active {
-    background: var(--blue);
-    color: #fff;
+    background: var(--ink);
+    color: var(--warm-white);
+    border-radius: 18px;
 }
 
-/* ── Card ──────────────────────────────────────────────────────────────────── */
+/* Card */
 .auth-card {
     background: var(--warm-white);
     border: 1px solid var(--border);
     border-radius: 18px;
     padding: 36px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    box-shadow: 0 4px 32px rgba(45,26,32,0.08);
 }
 
-/* ── Form panels ───────────────────────────────────────────────────────────── */
-.form-panel         { display: none; }
-.form-panel.active  { display: block; }
+.form-panel { display: none; }
+.form-panel.active { display: block; }
 
-/* ── Form fields ───────────────────────────────────────────────────────────── */
-.field {
-    margin-bottom: 20px;
-}
+/* Fields */
+.field { margin-bottom: 20px; }
 
 .field label {
     display: block;
-    font-size: 13px;
-    font-weight: 600;
-    color: #444;
-    margin-bottom: 6px;
-    letter-spacing: 0.02em;
+    font-family: var(--font-mono, monospace);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 8px;
+    letter-spacing: 2px;
     text-transform: uppercase;
 }
 
@@ -111,18 +107,16 @@
 
 .field input:focus {
     border-color: var(--blue);
-    box-shadow: 0 0 0 3px rgba(44,95,158,0.12);
+    box-shadow: 0 0 0 3px rgba(192,71,110,0.12);
     background: #fff;
 }
 
 .field input.is-invalid {
     border-color: var(--red);
-    box-shadow: 0 0 0 3px rgba(192,57,43,0.1);
+    box-shadow: 0 0 0 3px rgba(176,48,80,0.1);
 }
 
-.field input.is-valid {
-    border-color: #27ae60;
-}
+.field input.is-valid { border-color: var(--sage); }
 
 .invalid-feedback {
     font-size: 12px;
@@ -131,16 +125,14 @@
     display: none;
 }
 
-.field input.is-invalid ~ .invalid-feedback {
-    display: block;
-}
+.field input.is-invalid ~ .invalid-feedback { display: block; }
 
-/* ── Submit button ─────────────────────────────────────────────────────────── */
+/* Submit button */
 .btn-submit {
     width: 100%;
     padding: 13px;
-    background: var(--blue);
-    color: #fff;
+    background: var(--ink);
+    color: var(--warm-white);
     border: none;
     border-radius: 10px;
     font-size: 15px;
@@ -152,10 +144,10 @@
     letter-spacing: 0.01em;
 }
 
-.btn-submit:hover  { background: #244d82; }
+.btn-submit:hover { background: #4a2830; }
 .btn-submit:active { transform: scale(0.99); }
 
-/* ── Feedback banner ───────────────────────────────────────────────────────── */
+/* Feedback banner */
 .feedback-banner {
     display: none;
     padding: 11px 14px;
@@ -165,8 +157,8 @@
 }
 
 .feedback-banner.error {
-    background: #fdf0ee;
-    border: 1px solid #f5c6c2;
+    background: #fdf0f3;
+    border: 1px solid #f5c2cc;
     color: var(--red);
     display: block;
 }
@@ -178,7 +170,7 @@
     display: block;
 }
 
-/* ── Divider ───────────────────────────────────────────────────────────────── */
+/* Divider */
 .divider {
     text-align: center;
     color: var(--muted);
@@ -188,11 +180,11 @@
 
 .divider a { color: var(--blue); }
 
-/* ── Spinner ───────────────────────────────────────────────────────────────── */
+/* Spinner */
 .spinner {
     width: 16px;
     height: 16px;
-    border: 2px solid rgba(255,255,255,0.4);
+    border: 2px solid rgba(255,255,255,0.3);
     border-top-color: #fff;
     border-radius: 50%;
     animation: spin 0.7s linear infinite;
@@ -201,11 +193,6 @@
     margin-right: 8px;
 }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
-.btn-submit:disabled {
-    cursor: not-allowed;
-    opacity: 0.8;
-}
+.btn-submit:disabled { cursor: not-allowed; opacity: 0.7; }

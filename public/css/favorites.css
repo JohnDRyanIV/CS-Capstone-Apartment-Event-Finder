@@ -54,6 +54,10 @@ h1 {
     padding: 7px 16px;
 }
 
+.fav-card .card-footer-row {
+    margin-top: auto;
+}
+
 /* ── Remove button ─────────────────────────────────────────────────────────── */
 .remove-btn {
     background: none;
@@ -75,4 +79,24 @@ h1 {
     color: #aaa;
     padding: 60px 0;
     font-size: 15px;
+}
+/* ── Scroll fix — scrollbar stays in content, not beside navbar ────────────── */
+html, body {
+    height: 100%;
+    overflow: hidden;
+}
+
+.page-scroll {
+    height: calc(100vh - 56px);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* ── Page scroll (keeps navbar fixed-width regardless of scrollbar) ─────────── */
+html, body { overflow: hidden; }
+
+.page-scroll {
+    height: calc(100vh - 56px);
+    overflow-y: auto;
+    overflow-x: hidden;
 }

@@ -21,13 +21,13 @@
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
+  html, body { overflow: hidden; }
   body {
     background: var(--cream);
     color: var(--ink);
     font-family: 'DM Sans', sans-serif;
     font-weight: 300;
     line-height: 1.7;
-    overflow-x: hidden;
   }
 
   /* ---- HERO ---- */
@@ -590,10 +590,18 @@
     to { opacity: 1; transform: translateY(0); }
   }
   .topic-page.active { animation: fadeUp 0.3s ease; }
+
+  .page-scroll {
+  height: calc(100vh - 56px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
 </style>
+{% include "bootstrap.html" %}
 </head>
 <body>
   <header>{% include "navbar.html" %}</header>
+  <div class="page-scroll">
 <!-- HERO -->
 <div class="hero">
   <div class="hero-eyebrow">New Roots — Moving Guide</div>
@@ -1165,7 +1173,7 @@
 
   </aside>
 </div><!-- /main-content -->
-
+</div><!-- /page-scroll -->
 <script>
   const tabs = {
     'home':   { btn: 0, page: 'page-home',   articles: 'articles-home' },
@@ -1187,7 +1195,7 @@
     document.getElementById(t.articles).style.display = 'block';
     document.querySelectorAll('.tab-btn')[t.btn].classList.add('active');
 
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.querySelector('.page-scroll').scrollTo({ top: 0, behavior: 'smooth' });
   }
 </script>
 </body>

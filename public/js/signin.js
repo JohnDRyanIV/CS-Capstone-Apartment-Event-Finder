@@ -8,15 +8,6 @@
 // So this regular expression matches any string that contains between 1 and 20 alphanumeric characters
 const USERNAME_PATTERN = /^[a-zA-Z0-9]{1,20}$/;
 
-function resetSpinner(btnId, spinnerId, textId) {
-	const btn = document.getElementById(btnId);
-	const spinner = document.getElementById(spinnerId);
-	const text = document.getElementById(textId);
-	if (btn) btn.disabled = false;
-	if (spinner) spinner.style.display = "none";
-	if (text) text.style.opacity = "1";
-}
-
 // Password validation
 // \x21-\x7E is a range of ASCII characters from ! to ~s
 // you can find a list of ascii characters at https://ss64.com/ascii.html
@@ -75,14 +66,16 @@ function validateUsername(id) {
 }
 
 async function registerCallback(response) {
-	resetSpinner("registerSubmit", "registerSpinner", "registerBtnText");
-	if (handle503(response)) return;
-	const result = await response.json();
+	// Fetching the json returns a promise, and we need to await it.
+	result = await response.json();
 	if (!response.ok) {
 		alert("Registration failed: " + result.message);
 		return;
 	}
-	alert("Registration successful! Welcome, " + result.displayName + "! You can now sign in.");
+	alert("Registration successful! Welcome, " + result.displayName);
+	// You can redirect the user to another page here. It is commented for right now.
+	// window.location.href = "/";
+	return;
 }
 
 // We validate the register form here
@@ -105,13 +98,11 @@ function validateRegisterForm(event) {
 
 	username = document.getElementById("registerUsername");
 	password = document.getElementById("registerPassword");
-	displayName = document.getElementById("registerDisplayName");
 
 	// Send REST request if form is valid
 	const formData = {
 		username: username.value,
 		password: password.value,
-		displayName: displayName.value,
 	};
 
 	// Fill in the request object that is being sent to the server.
@@ -128,15 +119,26 @@ function validateRegisterForm(event) {
 		.catch(() => alert("An error occurred. Please try again."));
 }
 
-async function loginCallback(response) {
-	resetSpinner("loginSubmit", "loginSpinner", "loginBtnText");
-	if (handle503(response)) return;
+function loginCallback(response) {
 	if (!response.ok) {
-		const data = await response.json();
-		alert(data.message || "Login failed.");
+		response.json().then(data => {
+			alert(data.message || "Login failed.");
+		});
 		return;
 	}
-	window.location.href = "/map";
+
+	response.json().then(data => {
+		alert(`Welcome back, ${data.displayName}! Last login: ${data.lastLogin}`);
+
+		// Hide modal if open (optional)
+		const loginModal = bootstrap.Modal.getInstance(document.getElementById("loginModal"));
+		if (loginModal) {
+			loginModal.hide();
+		}
+
+		// Redirect to auth page
+		window.location.href = "/auth";
+	});
 }
 
   function validateLoginForm(event) {
