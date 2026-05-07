@@ -139,7 +139,9 @@
     display: flex;
     gap: 0;
     overflow-x: auto;
+    overflow-y: hidden;
     scrollbar-width: none;
+    touch-action: pan-x;
     position: relative;
   }
   .tab-nav::-webkit-scrollbar { display: none; }
@@ -1245,9 +1247,21 @@
     const t = tabs[id];
     document.getElementById(t.page).classList.add('active');
     document.getElementById(t.articles).style.display = 'block';
-    document.querySelectorAll('.tab-btn')[t.btn].classList.add('active');
+    const activeBtn = document.querySelectorAll('.tab-btn')[t.btn];
+    activeBtn.classList.add('active');
 
-    document.querySelector('.page-scroll').scrollTo({ top: 0, behavior: 'smooth' });
+    // Center the active tab in the nav
+    const nav = document.querySelector('.tab-nav');
+    const btnRect = activeBtn.getBoundingClientRect();
+    const navRect = nav.getBoundingClientRect();
+    const btnCenter = activeBtn.offsetLeft + activeBtn.offsetWidth / 2;
+    nav.scrollTo({ left: btnCenter - navRect.width / 2, behavior: 'smooth' });
+
+    // Scroll page so content appears just below the sticky tab nav
+    const tabWrap = document.querySelector('.tab-nav-wrap');
+    const pageScroll = document.querySelector('.page-scroll');
+    const tabNavHeight = tabWrap.getBoundingClientRect().height;
+    pageScroll.scrollTo({ top: tabWrap.offsetTop - tabNavHeight, behavior: 'smooth' });
   }
 </script>
 </body>

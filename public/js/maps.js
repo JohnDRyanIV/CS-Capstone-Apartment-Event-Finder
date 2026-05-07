@@ -21,6 +21,13 @@ function escapeHtml(text) {
         .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+function decodeHtml(text) {
+    if (!text) return "";
+    const ta = document.createElement("textarea");
+    ta.innerHTML = String(text);
+    return ta.value;
+}
+
 function extractPriceNumber(priceText) {
     if (!priceText) return null;
     const matches = String(priceText).match(/\d[\d,]*/g);
@@ -167,24 +174,20 @@ function isMobile() {
     return window.innerWidth < 768;
 }
 
+function getMobileFlyPadding() {
+    if (!isMobile()) return { top: 80, bottom: 40, left: 40, right: 40 };
+    const mapEl = document.getElementById("map");
+    const mapH = mapEl ? mapEl.getBoundingClientRect().height : window.innerHeight;
+    return { top: Math.round(mapH * 0.75), bottom: Math.round(mapH * 0.05), left: 20, right: 20 };
+}
+
 // ── Active popup tracker ───────────────────────────────────────────────────────
 let activePopup = null;
-let popupFromSidebar = false;
 
-let mapIsMovingToPin = false;
-
-map.on("movestart", () => { mapIsMovingToPin = true; });
-map.on("moveend",   () => { mapIsMovingToPin = false; });
-
-function openPopup(popup, fromSidebar = false) {
+function openPopup(popup) {
     if (activePopup) activePopup.remove();
     activePopup = popup;
-    popupFromSidebar = fromSidebar;
-    popup.on("close", () => {
-        activePopup = null;
-        if (popupFromSidebar && !mapIsMovingToPin) expandOnMobile();
-        popupFromSidebar = false;
-    });
+    popup.on("close", () => { activePopup = null; });
     popup.addTo(map);
 }
 
@@ -291,16 +294,10 @@ function collapseOnMobile() {
     }
 }
 
-function expandOnMobile() {
-    if (isMobile() && sidebar.classList.contains("collapsed")) {
-        sidebar.classList.remove("collapsed");
-        toggleBtn.textContent = "▼ Show Map";
-        setTimeout(() => map.resize(), 360);
-    }
-}
+
 
 function buildAptSidebarCard(apt) {
-    const title   = apt.title || apt.address || "Apartment";
+    const title   = decodeHtml(apt.title || apt.address || "Apartment");
     const address = apt.address || "Unknown address";
     const phone   = apt.phone_number || null;
     const link    = apt.link || null;
@@ -343,13 +340,13 @@ function buildAptSidebarCard(apt) {
 }
 
 function buildEventSidebarCard(ev) {
-    const title      = ev.event_title || "Event";
+    const title      = decodeHtml(ev.event_title || "Event");
     const address    = ev.address     || "";
     const rawEnd = ev.event_end_date;
     const dateStr = rawEnd && !isDefaultTime(rawEnd) && formatEventDate(rawEnd) !== formatEventDate(ev.event_start_date)
         ? `${formatEventDate(ev.event_start_date)} - ${formatEventDate(rawEnd)}`
         : formatEventDate(ev.event_start_date) || ev.event_date || "";
-    const desc       = ev.description || "";
+    const desc       = decodeHtml(ev.description || "");
     const link       = ev.event_detail_url || null;
 
     let recurrenceInfo = "";
@@ -404,11 +401,11 @@ function populateSidebarApartments(apartments, maxPrice, minPrice = 0) {
             if (e.target.closest(".favorite-btn")) return;
             document.querySelectorAll(".sidebar-card").forEach(c => c.classList.remove("active"));
             card.classList.add("active");
-            map.flyTo({ center: [apt.lon, apt.lat], zoom: 15, duration: 600, padding: isMobile() ? { top: 420, bottom: 20, left: 20, right: 20 } : { top: 80, bottom: 40, left: 40, right: 40 } });
-            const popup = new mapboxgl.Popup({ offset: 12, maxWidth: isMobile() ? (window.innerWidth - 32) + "px" : "320px" })
+            map.flyTo({ center: [apt.lon, apt.lat], zoom: 15, duration: 600, padding: getMobileFlyPadding() });
+            const popup = new mapboxgl.Popup({ offset: 12, anchor: 'bottom', maxWidth: isMobile() ? (window.innerWidth - 32) + "px" : "320px" })
                 .setLngLat([apt.lon, apt.lat])
                 .setHTML(buildAptPopupHTML(apt));
-            openPopup(popup, true);
+            openPopup(popup);
             collapseOnMobile();
         });
         sidebarList.appendChild(card);
@@ -433,12 +430,12 @@ function populateSidebarEvents(events) {
             if (e.target.closest(".favorite-btn")) return;
             document.querySelectorAll(".sidebar-card").forEach(c => c.classList.remove("active"));
             card.classList.add("active");
-            map.flyTo({ center: [ev.longitude, ev.latitude], zoom: 15, duration: 600, padding: isMobile() ? { top: 420, bottom: 20, left: 20, right: 20 } : { top: 80, bottom: 40, left: 40, right: 40 } });
+            map.flyTo({ center: [ev.longitude, ev.latitude], zoom: 15, duration: 600, padding: getMobileFlyPadding() });
             const eventsAtLocation = eventGroups[`${ev.longitude},${ev.latitude}`] || [ev];
-            const popup = new mapboxgl.Popup({ offset: 12, maxWidth: isMobile() ? (window.innerWidth - 32) + "px" : "380px" })
+            const popup = new mapboxgl.Popup({ offset: 12, anchor: 'bottom', maxWidth: isMobile() ? (window.innerWidth - 32) + "px" : "380px" })
                 .setLngLat([ev.longitude, ev.latitude])
                 .setDOMContent(buildEventCarouselNode(eventsAtLocation));
-            openPopup(popup, true);
+            openPopup(popup);
             collapseOnMobile();
         });
         sidebarList.appendChild(card);
@@ -476,13 +473,13 @@ function buildAptPopupHTML(apt) {
 }
 
 function buildEventCardHTML(event) {
-    const title   = event.event_title || "Event";
+    const title   = decodeHtml(event.event_title || "Event");
     const address = event.address     || "";
     const rawEndEvt = event.event_end_date;
     const dateStr = rawEndEvt && !isDefaultTime(rawEndEvt) && formatEventDate(rawEndEvt) !== formatEventDate(event.event_start_date)
         ? `${formatEventDate(event.event_start_date)} - ${formatEventDate(rawEndEvt)}`
         : formatEventDate(event.event_start_date) || event.event_date || "";
-    const desc    = event.description || "";
+    const desc    = decodeHtml(event.description || "");
     const link    = event.event_detail_url || null;
 
     let recurrenceInfo = "";
@@ -681,9 +678,7 @@ map.on("load", () => {
 
         // ── DOM refs ────────────────────────────────────────────────────────
         const priceRange         = document.getElementById("priceRange");
-        const priceValue         = document.getElementById("priceValue");
         const priceRangeMobile   = document.getElementById("priceRangeMobile");
-        const priceValueMobile   = document.getElementById("priceValueMobile");
         const aptFiltersDesktop  = document.getElementById("apt-filters-desktop");
         const evtFiltersDesktop  = document.getElementById("evt-filters-desktop");
         const aptFiltersMobile   = document.getElementById("apt-filters-mobile");
@@ -708,7 +703,8 @@ map.on("load", () => {
         });
 
         // ── Sync desktop & mobile price sliders ─────────────────────────────
-        const priceValueDisplay  = document.getElementById("priceValueDisplay");
+        const priceValueDisplay    = document.getElementById("priceValueDisplay");
+        const priceMinDisplayMobile = document.getElementById("priceMinDisplayMobile");
         const priceMinEl         = document.getElementById("priceMin");
         const priceMinMobileEl   = document.getElementById("priceMinMobile");
         const priceMinDisplay    = document.getElementById("priceMinDisplay");
@@ -747,6 +743,7 @@ map.on("load", () => {
             if (priceMinDisplay) priceMinDisplay.textContent = `$${newMin.toLocaleString()}`;
             if (priceMaxDisplay) priceMaxDisplay.textContent = `$${newMax.toLocaleString()}`;
             if (priceValueDisplay) priceValueDisplay.textContent = `$${newMax.toLocaleString()}`;
+            if (priceMinDisplayMobile) priceMinDisplayMobile.textContent = `$${newMin.toLocaleString()}`;
 
             // Update fill tracks
             updateFill(priceRangeFill,    newMin, newMax, minRent, maxRent);
@@ -781,14 +778,14 @@ map.on("load", () => {
             const apt = aptId && aptById[aptId];
             while (Math.abs(e.lngLat.lng - coords[0]) > 180)
                 coords[0] += e.lngLat.lng > coords[0] ? 360 : -360;
-            const aptPopup = new mapboxgl.Popup({ offset: 12, maxWidth: isMobile() ? (window.innerWidth - 32) + "px" : "320px" })
+            const aptPopup = new mapboxgl.Popup({ offset: 12, anchor: 'bottom', maxWidth: isMobile() ? (window.innerWidth - 32) + "px" : "320px" })
                 .setLngLat(coords)
                 .setHTML(apt ? buildAptPopupHTML(apt) : "<div class='apt-popup'><h3>Apartment</h3></div>");
             if (isMobile()) {
-                map.once("moveend", () => openPopup(aptPopup, false));
-                map.flyTo({ center: coords, zoom: map.getZoom(), padding: { top: 300, bottom: 40, left: 20, right: 20 }, duration: 400 });
+                map.once("moveend", () => openPopup(aptPopup));
+                map.flyTo({ center: coords, zoom: map.getZoom(), padding: { top: 400, bottom: 20, left: 20, right: 20 }, duration: 400 });
             } else {
-                openPopup(aptPopup, false);
+                openPopup(aptPopup);
             }
         });
 
@@ -1017,7 +1014,7 @@ map.on("load", () => {
 
         const initialFilteredEvents = events.filter(ev => ev.latitude != null && ev.longitude != null && isEventInFuture(ev));
         eventGroups = groupByCoord(initialFilteredEvents);
-        addClusteredLayer("events", buildEventGeoJSON(initialFilteredEvents), "#c4623a", "#a8522e", "#8a4224");
+        addClusteredLayer("events", buildEventGeoJSON(initialFilteredEvents), "#b5546a", "#9a4459", "#7d3347");
         setLayerGroupVisibility("events", false);
         updatePinSize();
 
@@ -1027,13 +1024,13 @@ map.on("load", () => {
             while (Math.abs(e.lngLat.lng - coords[0]) > 180)
                 coords[0] += e.lngLat.lng > coords[0] ? 360 : -360;
             const eventsAtLocation = eventGroups[coordKey] || [];
-            const evtPopup = new mapboxgl.Popup({ offset: 12, maxWidth: isMobile() ? (window.innerWidth - 32) + "px" : "380px" })
+            const evtPopup = new mapboxgl.Popup({ offset: 12, anchor: 'bottom', maxWidth: isMobile() ? (window.innerWidth - 32) + "px" : "380px" })
                 .setLngLat(coords).setDOMContent(buildEventCarouselNode(eventsAtLocation));
             if (isMobile()) {
-                map.once("moveend", () => openPopup(evtPopup, false));
-                map.flyTo({ center: coords, zoom: map.getZoom(), padding: { top: 300, bottom: 40, left: 20, right: 20 }, duration: 400 });
+                map.once("moveend", () => openPopup(evtPopup));
+                map.flyTo({ center: coords, zoom: map.getZoom(), padding: { top: 400, bottom: 20, left: 20, right: 20 }, duration: 400 });
             } else {
-                openPopup(evtPopup, false);
+                openPopup(evtPopup);
             }
         });
 
@@ -1069,15 +1066,9 @@ map.on("load", () => {
         // Close any open popup when switching layers
         document.querySelectorAll(".layer-seg-btn").forEach(btn => {
             btn.addEventListener("click", () => {
-                if (activePopup) {
-                    suppressNextClose = true;
-                    activePopup.remove();
-                    suppressNextClose = false;
-                    activePopup = null;
-                    popupFromSidebar = false;
-                }
+                if (activePopup) { activePopup.remove(); activePopup = null; }
             });
-        }, true); // capture phase so it runs before updateVisibleLayer
+        }, true);
 
         // All layer toggle buttons (desktop + mobile both use .layer-seg-btn)
         const sidebarToggleBtn = document.getElementById("sidebar-toggle");
@@ -1103,6 +1094,17 @@ map.on("load", () => {
 
         // Fetch favorites then rebuild cards so heart state is correct from the start
         updateSidebarMaxHeight();
+
+        // On mobile, play a peek animation to draw attention to the sidebar
+        if (isMobile()) {
+            setTimeout(() => {
+                sidebar.classList.add("peek");
+                sidebar.addEventListener("animationend", () => {
+                    sidebar.classList.remove("peek");
+                }, { once: true });
+            }, 800);
+        }
+
         fetchFavorites().then(() => {
             // Rebuild cards with correct fav state but don't override
             // whatever layer the user may have already switched to

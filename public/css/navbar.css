@@ -5,7 +5,7 @@
 body { margin: 0; }
 
 #site-nav {
-    background: #1a1612;
+    background: #2d1a20;
     border-bottom: none;
     font-family: 'Source Serif 4', Georgia, serif;
     position: relative;
@@ -106,7 +106,7 @@ body { margin: 0; }
         left: 0;
         right: 0;
         z-index: 1000;
-        background: #1a1612;
+        background: #2d1a20;
         border-bottom: 1px solid rgba(255,255,255,0.08);
         flex-direction: column;
         align-items: flex-start;

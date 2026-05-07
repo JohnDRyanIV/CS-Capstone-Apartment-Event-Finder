@@ -14,7 +14,7 @@
     --red:          #c0392b;
     --sage:         #5a7a5c;
     --gold:         #d4a843;
-    --terracotta:   #c4623a;
+    --terracotta:   #b5546a;
     --dusty-blue:   #4a6b8a;
     --font-serif:   'Source Serif 4', Georgia, serif;
     --font-display: 'Lora', Georgia, serif;
@@ -157,8 +157,23 @@ body {
 
 /* ── Event CTA (terracotta) ────────────────────────────────────────────────── */
 .cta-event {
-    background: var(--light-terracotta, #faf0eb);
-    color: var(--terracotta, #c4623a);
+    background: var(--light-terracotta, #faf0f3);
+    color: var(--terracotta, #b5546a);
 }
 
-.cta-event:hover { background: #f5e0d4; }
+.cta-event:hover { background: #f5d8e0; }
+
+/* ── Color dots for apartments / events ────────────────────────────────────── */
+.dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
+}
+
+.dot-apt { background: #5a7a5c; }
+.dot-evt { background: #b5546a; }

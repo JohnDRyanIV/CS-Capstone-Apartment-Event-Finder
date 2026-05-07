@@ -21,8 +21,8 @@
 
     <!-- Row 1: Segmented layer toggle -->
     <div class="layer-seg" style="width:100%">
-        <button class="layer-seg-btn active" id="seg-apartments" data-layer="apartments">🟢 Apartments</button>
-        <button class="layer-seg-btn" id="seg-events" data-layer="events">🟠 Events</button>
+        <button class="layer-seg-btn active" id="seg-apartments" data-layer="apartments"><span class="dot dot-apt"></span> Apartments</button>
+        <button class="layer-seg-btn" id="seg-events" data-layer="events"><span class="dot dot-evt"></span> Events</button>
     </div>
 
     <!-- Row 2: Filters -->
@@ -35,7 +35,10 @@
             <input type="range" id="priceMinMobile" min="500" max="4000" step="50" value="500">
             <input type="range" id="priceRangeMobile" min="500" max="4000" step="50" value="4000">
         </div>
-        <span id="priceValueDisplay">$4,000</span>
+        <div class="price-labels-stacked">
+            <span id="priceMinDisplayMobile">$500</span>
+            <span id="priceValueDisplay">$4,000</span>
+        </div>
         <input type="hidden" id="priceValueMobile">
     </div>
 
@@ -76,8 +79,8 @@
     <!-- Desktop floating controls (hidden on mobile) -->
     <div id="desktop-controls" class="d-none d-md-flex flex-column gap-2">
         <div class="layer-seg desktop-layer-seg">
-            <button class="layer-seg-btn active" data-layer="apartments">🟢 Apartments</button>
-            <button class="layer-seg-btn" data-layer="events">🟠 Events</button>
+            <button class="layer-seg-btn active" data-layer="apartments"><span class="dot dot-apt"></span> Apartments</button>
+            <button class="layer-seg-btn" data-layer="events"><span class="dot dot-evt"></span> Events</button>
         </div>
 
         <div id="apt-filters-desktop" class="d-flex flex-column gap-1 pt-2 border-top">
