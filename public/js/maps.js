@@ -43,6 +43,39 @@ function getApartmentMinPrice(apt) {
     return prices.length === 0 ? null : Math.min(...prices);
 }
 
+function getApartmentPriceForBeds(apt, selectedBeds) {
+    if (!selectedBeds || selectedBeds === "any") return getApartmentMinPrice(apt);
+    if (!apt.rent_by_bed) return null;
+    // Find rent entries whose bed key normalizes to the selected bed count
+    const matches = [];
+    for (const [key, priceStr] of Object.entries(apt.rent_by_bed)) {
+        const k = key.toLowerCase();
+        const segment = k.split(",")[0].trim();
+        let bedNums = [];
+        if (k.includes("studio")) {
+            bedNums = [0];
+        } else {
+            const range = segment.match(/^\s*(\d+)\s*[-\u2013]\s*(\d+)/);
+            if (range) {
+                const lo = +range[1], hi = +range[2];
+                for (let n = lo; n <= hi; n++) bedNums.push(n);
+            } else {
+                const single = segment.match(/^\s*(\d+)/);
+                if (single) bedNums = [+single[1]];
+            }
+        }
+        const matchesSelection =
+            (selectedBeds === "studio" && bedNums.includes(0)) ||
+            (selectedBeds === "4+" && bedNums.some(n => n >= 4)) ||
+            (!isNaN(+selectedBeds) && bedNums.includes(+selectedBeds));
+        if (matchesSelection) {
+            const num = extractPriceNumber(priceStr);
+            if (num !== null) matches.push(num);
+        }
+    }
+    return matches.length === 0 ? null : Math.min(...matches);
+}
+
 function hasReadablePrice(apt) {
     // Filter out "call for info" listings and outliers over $5,000
     const min = getApartmentMinPrice(apt);
@@ -437,8 +470,8 @@ function populateSidebarApartments(apartments, maxPrice, minPrice = 0, beds = "a
     const filtered = apartments
         .filter(apt => apt.lat && apt.lon)
         .filter(hasReadablePrice)
-        .filter(apt => { const p = getApartmentMinPrice(apt); return p >= minPrice && p <= maxPrice; })
-        .filter(apt => aptMatchesBeds(apt, beds));
+        .filter(apt => aptMatchesBeds(apt, beds))
+        .filter(apt => { const p = getApartmentPriceForBeds(apt, beds); return p !== null && p >= minPrice && p <= maxPrice; });
 
     sidebarCount.textContent = `${filtered.length} listing${filtered.length !== 1 ? "s" : ""}`;
 
@@ -563,8 +596,8 @@ function buildApartmentGeoJSON(apartments, maxPrice, minPrice = 0, beds = "any")
         features: apartments
             .filter(apt => apt.lat && apt.lon)
             .filter(hasReadablePrice)
-            .filter(apt => { const p = getApartmentMinPrice(apt); return p >= minPrice && p <= maxPrice; })
             .filter(apt => aptMatchesBeds(apt, beds))
+            .filter(apt => { const p = getApartmentPriceForBeds(apt, beds); return p !== null && p >= minPrice && p <= maxPrice; })
             .map(apt => ({
                 type: "Feature",
                 geometry: { type: "Point", coordinates: [apt.lon, apt.lat] },
