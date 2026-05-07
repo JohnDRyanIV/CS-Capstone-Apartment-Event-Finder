@@ -1097,3 +1097,15 @@ input[type="range"].form-range::-moz-range-track {
         box-sizing: border-box;
     }
 }
+
+/* ── Prevent page zoom on UI elements (pinch/double-tap) ──────────────────── */
+@media (max-width: 767px) {
+    #topbar,
+    #sidebar,
+    #desktop-controls,
+    .mapboxgl-popup,
+    .mapboxgl-popup-content,
+    header {
+        touch-action: pan-x pan-y;
+    }
+}

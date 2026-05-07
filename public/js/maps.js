@@ -7,6 +7,8 @@ const map = new mapboxgl.Map({
     zoom: 11
 });
 
+
+
 // ── Icons ──────────────────────────────────────────────────────────────────────
 const pinIcon   = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>`;
 const calIcon   = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
@@ -169,13 +171,18 @@ function isMobile() {
 let activePopup = null;
 let popupFromSidebar = false;
 
+let mapIsMovingToPin = false;
+
+map.on("movestart", () => { mapIsMovingToPin = true; });
+map.on("moveend",   () => { mapIsMovingToPin = false; });
+
 function openPopup(popup, fromSidebar = false) {
     if (activePopup) activePopup.remove();
     activePopup = popup;
     popupFromSidebar = fromSidebar;
     popup.on("close", () => {
         activePopup = null;
-        if (popupFromSidebar) expandOnMobile();
+        if (popupFromSidebar && !mapIsMovingToPin) expandOnMobile();
         popupFromSidebar = false;
     });
     popup.addTo(map);
@@ -397,7 +404,7 @@ function populateSidebarApartments(apartments, maxPrice, minPrice = 0) {
             if (e.target.closest(".favorite-btn")) return;
             document.querySelectorAll(".sidebar-card").forEach(c => c.classList.remove("active"));
             card.classList.add("active");
-            map.flyTo({ center: [apt.lon, apt.lat], zoom: 15, duration: 600, padding: isMobile() ? { top: 220, bottom: 60, left: 20, right: 20 } : { top: 80, bottom: 40, left: 40, right: 40 } });
+            map.flyTo({ center: [apt.lon, apt.lat], zoom: 15, duration: 600, padding: isMobile() ? { top: 420, bottom: 20, left: 20, right: 20 } : { top: 80, bottom: 40, left: 40, right: 40 } });
             const popup = new mapboxgl.Popup({ offset: 12, maxWidth: isMobile() ? (window.innerWidth - 32) + "px" : "320px" })
                 .setLngLat([apt.lon, apt.lat])
                 .setHTML(buildAptPopupHTML(apt));
@@ -426,7 +433,7 @@ function populateSidebarEvents(events) {
             if (e.target.closest(".favorite-btn")) return;
             document.querySelectorAll(".sidebar-card").forEach(c => c.classList.remove("active"));
             card.classList.add("active");
-            map.flyTo({ center: [ev.longitude, ev.latitude], zoom: 15, duration: 600, padding: isMobile() ? { top: 220, bottom: 60, left: 20, right: 20 } : { top: 80, bottom: 40, left: 40, right: 40 } });
+            map.flyTo({ center: [ev.longitude, ev.latitude], zoom: 15, duration: 600, padding: isMobile() ? { top: 420, bottom: 20, left: 20, right: 20 } : { top: 80, bottom: 40, left: 40, right: 40 } });
             const eventsAtLocation = eventGroups[`${ev.longitude},${ev.latitude}`] || [ev];
             const popup = new mapboxgl.Popup({ offset: 12, maxWidth: isMobile() ? (window.innerWidth - 32) + "px" : "380px" })
                 .setLngLat([ev.longitude, ev.latitude])
@@ -774,10 +781,15 @@ map.on("load", () => {
             const apt = aptId && aptById[aptId];
             while (Math.abs(e.lngLat.lng - coords[0]) > 180)
                 coords[0] += e.lngLat.lng > coords[0] ? 360 : -360;
-            if (isMobile()) map.flyTo({ center: coords, zoom: map.getZoom(), padding: { top: 220, bottom: 60, left: 20, right: 20 }, duration: 400 });
-            openPopup(new mapboxgl.Popup({ offset: 12, maxWidth: isMobile() ? (window.innerWidth - 32) + "px" : "320px" })
+            const aptPopup = new mapboxgl.Popup({ offset: 12, maxWidth: isMobile() ? (window.innerWidth - 32) + "px" : "320px" })
                 .setLngLat(coords)
-                .setHTML(apt ? buildAptPopupHTML(apt) : "<div class='apt-popup'><h3>Apartment</h3></div>"), false);
+                .setHTML(apt ? buildAptPopupHTML(apt) : "<div class='apt-popup'><h3>Apartment</h3></div>");
+            if (isMobile()) {
+                map.once("moveend", () => openPopup(aptPopup, false));
+                map.flyTo({ center: coords, zoom: map.getZoom(), padding: { top: 300, bottom: 40, left: 20, right: 20 }, duration: 400 });
+            } else {
+                openPopup(aptPopup, false);
+            }
         });
 
         // ── Event categories ─────────────────────────────────────────────────
@@ -1015,9 +1027,14 @@ map.on("load", () => {
             while (Math.abs(e.lngLat.lng - coords[0]) > 180)
                 coords[0] += e.lngLat.lng > coords[0] ? 360 : -360;
             const eventsAtLocation = eventGroups[coordKey] || [];
-            if (isMobile()) map.flyTo({ center: coords, zoom: map.getZoom(), padding: { top: 220, bottom: 60, left: 20, right: 20 }, duration: 400 });
-            openPopup(new mapboxgl.Popup({ offset: 12, maxWidth: isMobile() ? (window.innerWidth - 32) + "px" : "380px" })
-                .setLngLat(coords).setDOMContent(buildEventCarouselNode(eventsAtLocation)), false);
+            const evtPopup = new mapboxgl.Popup({ offset: 12, maxWidth: isMobile() ? (window.innerWidth - 32) + "px" : "380px" })
+                .setLngLat(coords).setDOMContent(buildEventCarouselNode(eventsAtLocation));
+            if (isMobile()) {
+                map.once("moveend", () => openPopup(evtPopup, false));
+                map.flyTo({ center: coords, zoom: map.getZoom(), padding: { top: 300, bottom: 40, left: 20, right: 20 }, duration: 400 });
+            } else {
+                openPopup(evtPopup, false);
+            }
         });
 
         // ── Layer toggle (shared radio buttons across desktop + mobile) ──────
@@ -1048,6 +1065,19 @@ map.on("load", () => {
                 updateEventLayer();
             }
         }
+
+        // Close any open popup when switching layers
+        document.querySelectorAll(".layer-seg-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                if (activePopup) {
+                    suppressNextClose = true;
+                    activePopup.remove();
+                    suppressNextClose = false;
+                    activePopup = null;
+                    popupFromSidebar = false;
+                }
+            });
+        }, true); // capture phase so it runs before updateVisibleLayer
 
         // All layer toggle buttons (desktop + mobile both use .layer-seg-btn)
         const sidebarToggleBtn = document.getElementById("sidebar-toggle");
