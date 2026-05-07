@@ -709,9 +709,12 @@ function updateSidebarMaxHeight() {
         }
     }
     const navbarH = 56;
+    // Use window.innerHeight (not 100vh) for accurate viewport on iOS Safari/Chrome
+    // — 100vh on iOS includes the address bar area, causing the sidebar to overflow
+    const visibleH = window.innerHeight;
     document.documentElement.style.setProperty(
         "--sidebar-max-height",
-        `calc(100vh - ${navbarH}px - ${topbarH}px)`
+        `${visibleH - navbarH - topbarH}px`
     );
 }
 
@@ -725,6 +728,12 @@ window.addEventListener("resize", () => {
         window.dispatchEvent(new Event("breakpointchange"));
     }
 });
+
+// iOS Safari address bar collapse/expand changes window.innerHeight without firing resize
+window.addEventListener("scroll", updateSidebarMaxHeight, { passive: true });
+if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", updateSidebarMaxHeight);
+}
 
 // ── Main ───────────────────────────────────────────────────────────────────────
 let eventGroups = {};
