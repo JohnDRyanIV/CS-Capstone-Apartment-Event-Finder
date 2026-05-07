@@ -12,7 +12,8 @@ function formatEventDate(isoStr) {
     const d = new Date(isoStr);
     if (isNaN(d)) return null;
     const hasTime = !isoStr.endsWith("T23:59:59");
-    const datePart = d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    const weekday = d.toLocaleDateString("en-US", { weekday: "short" });
+    const datePart = `${weekday}, ${d.getMonth() + 1}/${String(d.getDate()).padStart(2, "0")}`;
     if (!hasTime) return datePart;
     const timePart = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
     return `${datePart} · ${timePart}`;

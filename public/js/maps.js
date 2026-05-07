@@ -1,4 +1,5 @@
 mapboxgl.accessToken = window.MAPBOX_TOKEN;
+mapboxgl.config.EVENTS_URL = '';
 
 const map = new mapboxgl.Map({
     container: "map",
@@ -48,10 +49,28 @@ function hasReadablePrice(apt) {
     return min !== null && min <= 5000;
 }
 
+function aptMatchesBeds(apt, selectedBeds) {
+    if (!selectedBeds || selectedBeds === "any") return true;
+    if (!apt.bed_numbers || apt.bed_numbers.length === 0) return false;
+    if (selectedBeds === "studio") return apt.bed_numbers.includes(0);
+    if (selectedBeds === "4+") return apt.bed_numbers.some(n => n >= 4);
+    return apt.bed_numbers.includes(Number(selectedBeds));
+}
+
+function getActiveBeds() {
+    const btn = document.querySelector(".bed-seg .layer-seg-btn.active");
+    return btn ? btn.dataset.beds : "any";
+}
+
 function normalizeDateString(value) {
     if (!value) return null;
     const parsed = new Date(value);
-    return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString().split("T")[0];
+    if (Number.isNaN(parsed.getTime())) return null;
+    // Use LOCAL date components, not UTC, so events near midnight don't shift days
+    const y = parsed.getFullYear();
+    const m = String(parsed.getMonth() + 1).padStart(2, "0");
+    const d = String(parsed.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
 }
 
 function eventMatchesDateRange(event, startDate, endDate) {
@@ -147,10 +166,41 @@ function formatEventDate(isoStr) {
     const d = new Date(isoStr);
     if (isNaN(d)) return null;
     const hasTime = !isoStr.endsWith("T23:59:59"); // end-of-day default means no real time
-    const datePart = d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    const weekday = d.toLocaleDateString("en-US", { weekday: "short" });
+    const datePart = `${weekday}, ${d.getMonth() + 1}/${String(d.getDate()).padStart(2, "0")}`;
     if (!hasTime) return datePart;
     const timePart = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
     return `${datePart} · ${timePart}`;
+}
+
+function formatEventTime(isoStr) {
+    if (!isoStr) return null;
+    const d = new Date(isoStr);
+    if (isNaN(d)) return null;
+    return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+}
+
+function isSameLocalDay(isoA, isoB) {
+    if (!isoA || !isoB) return false;
+    const a = new Date(isoA), b = new Date(isoB);
+    if (isNaN(a) || isNaN(b)) return false;
+    return a.getFullYear() === b.getFullYear()
+        && a.getMonth() === b.getMonth()
+        && a.getDate() === b.getDate();
+}
+
+function formatEventDateRange(startIso, endIso) {
+    if (!startIso) return "";
+    const startStr = formatEventDate(startIso);
+    if (!endIso || isDefaultTime(endIso)) return startStr;
+    if (formatEventDate(endIso) === startStr) return startStr;
+    // Same day: show date once, then times
+    if (isSameLocalDay(startIso, endIso)) {
+        const endTime = formatEventTime(endIso);
+        return endTime ? `${startStr} - ${endTime}` : startStr;
+    }
+    // Different days: full date range
+    return `${startStr} - ${formatEventDate(endIso)}`;
 }
 
 function isEventInFuture(ev) {
@@ -260,9 +310,12 @@ const sidebarCount = document.getElementById("sidebar-count");
 const sidebar      = document.getElementById("sidebar");
 const toggleBtn    = document.getElementById("sidebar-toggle");
 
-// Collapse sidebar immediately on mobile before anything loads
+// Sidebar starts collapsed on mobile (class baked into HTML).
+// On desktop, remove the collapsed class so it starts expanded.
+if (!isMobile()) {
+    sidebar.classList.remove("collapsed");
+}
 if (isMobile()) {
-    sidebar.classList.add("collapsed");
     toggleBtn.textContent = "▲ Show List";
 }
 
@@ -343,9 +396,7 @@ function buildEventSidebarCard(ev) {
     const title      = decodeHtml(ev.event_title || "Event");
     const address    = ev.address     || "";
     const rawEnd = ev.event_end_date;
-    const dateStr = rawEnd && !isDefaultTime(rawEnd) && formatEventDate(rawEnd) !== formatEventDate(ev.event_start_date)
-        ? `${formatEventDate(ev.event_start_date)} - ${formatEventDate(rawEnd)}`
-        : formatEventDate(ev.event_start_date) || ev.event_date || "";
+    const dateStr = formatEventDateRange(ev.event_start_date, rawEnd) || ev.event_date || "";
     const desc       = decodeHtml(ev.description || "");
     const link       = ev.event_detail_url || null;
 
@@ -379,14 +430,15 @@ function buildEventSidebarCard(ev) {
     return card;
 }
 
-function populateSidebarApartments(apartments, maxPrice, minPrice = 0) {
-    sidebarTitle.textContent = "Apartments";
+function populateSidebarApartments(apartments, maxPrice, minPrice = 0, beds = "any") {
+    sidebarTitle.innerHTML = "<span class='dot dot-apt'></span> Apartments";
     sidebarList.innerHTML = "";
 
     const filtered = apartments
         .filter(apt => apt.lat && apt.lon)
         .filter(hasReadablePrice)
-        .filter(apt => { const p = getApartmentMinPrice(apt); return p >= minPrice && p <= maxPrice; });
+        .filter(apt => { const p = getApartmentMinPrice(apt); return p >= minPrice && p <= maxPrice; })
+        .filter(apt => aptMatchesBeds(apt, beds));
 
     sidebarCount.textContent = `${filtered.length} listing${filtered.length !== 1 ? "s" : ""}`;
 
@@ -413,7 +465,7 @@ function populateSidebarApartments(apartments, maxPrice, minPrice = 0) {
 }
 
 function populateSidebarEvents(events) {
-    sidebarTitle.textContent = "Events";
+    sidebarTitle.innerHTML = "<span class='dot dot-evt'></span> Events";
     sidebarList.innerHTML = "";
 
     const filtered = events.filter(ev => ev.latitude != null && ev.longitude != null);
@@ -476,9 +528,7 @@ function buildEventCardHTML(event) {
     const title   = decodeHtml(event.event_title || "Event");
     const address = event.address     || "";
     const rawEndEvt = event.event_end_date;
-    const dateStr = rawEndEvt && !isDefaultTime(rawEndEvt) && formatEventDate(rawEndEvt) !== formatEventDate(event.event_start_date)
-        ? `${formatEventDate(event.event_start_date)} - ${formatEventDate(rawEndEvt)}`
-        : formatEventDate(event.event_start_date) || event.event_date || "";
+    const dateStr = formatEventDateRange(event.event_start_date, rawEndEvt) || event.event_date || "";
     const desc    = decodeHtml(event.description || "");
     const link    = event.event_detail_url || null;
 
@@ -507,13 +557,14 @@ function buildEventCardHTML(event) {
 }
 
 // ── GeoJSON builders ───────────────────────────────────────────────────────────
-function buildApartmentGeoJSON(apartments, maxPrice, minPrice = 0) {
+function buildApartmentGeoJSON(apartments, maxPrice, minPrice = 0, beds = "any") {
     return {
         type: "FeatureCollection",
         features: apartments
             .filter(apt => apt.lat && apt.lon)
             .filter(hasReadablePrice)
             .filter(apt => { const p = getApartmentMinPrice(apt); return p >= minPrice && p <= maxPrice; })
+            .filter(apt => aptMatchesBeds(apt, beds))
             .map(apt => ({
                 type: "Feature",
                 geometry: { type: "Point", coordinates: [apt.lon, apt.lat] },
@@ -648,7 +699,15 @@ function updatePinSize() {
 
 function updateSidebarMaxHeight() {
     const topbar = document.getElementById("topbar");
-    const topbarH = (isMobile() && topbar) ? topbar.getBoundingClientRect().height : 0;
+    const filtersWrap = document.getElementById("filters-wrap");
+    let topbarH = 0;
+    if (isMobile() && topbar) {
+        topbarH = topbar.getBoundingClientRect().height;
+        // Add filter overlay height when expanded
+        if (filtersWrap && !topbar.classList.contains("filters-collapsed")) {
+            topbarH += filtersWrap.getBoundingClientRect().height;
+        }
+    }
     const navbarH = 56;
     document.documentElement.style.setProperty(
         "--sidebar-max-height",
@@ -749,8 +808,9 @@ map.on("load", () => {
             updateFill(priceRangeFill,    newMin, newMax, minRent, maxRent);
             updateFill(priceRangeFillMob, newMin, newMax, minRent, maxRent);
 
-            map.getSource("apartments").setData(buildApartmentGeoJSON(apartments, newMax, newMin));
-            populateSidebarApartments(apartments, newMax, newMin);
+            const beds = getActiveBeds();
+            map.getSource("apartments").setData(buildApartmentGeoJSON(apartments, newMax, newMin, beds));
+            populateSidebarApartments(apartments, newMax, newMin, beds);
         }
 
         if (priceMinEl) priceMinEl.addEventListener("input", () =>
@@ -767,8 +827,8 @@ map.on("load", () => {
         const aptById = {};
         apartments.forEach(apt => { if (apt.listing_id) aptById[apt.listing_id] = apt; });
 
-        addClusteredLayer("apartments", buildApartmentGeoJSON(apartments, maxRent, minRent), "#5a7a5c", "#4a6a4c", "#3a5a3c");
-        populateSidebarApartments(apartments, maxRent, minRent);
+        addClusteredLayer("apartments", buildApartmentGeoJSON(apartments, maxRent, minRent, getActiveBeds()), "#5a7a5c", "#4a6a4c", "#3a5a3c");
+        populateSidebarApartments(apartments, maxRent, minRent, getActiveBeds());
         // Draw initial fill
         syncPrice(minRent, maxRent);
 
@@ -805,7 +865,7 @@ map.on("load", () => {
         }
 
         function getActiveLayer() {
-            const active = document.querySelector(".layer-seg-btn.active");
+            const active = document.querySelector(".layer-seg-btn[data-layer].active");
             return active ? active.dataset.layer : "apartments";
         }
 
@@ -862,7 +922,10 @@ map.on("load", () => {
                     btn.textContent = "📅 All Dates";
                     btn.classList.remove("active");
                 } else {
-                    const fmt = d => fromYMD(d).toLocaleDateString("en-US", { month:"short", day:"numeric" });
+                    const fmt = d => {
+                        const dt = fromYMD(d);
+                        return `${dt.getMonth() + 1}/${String(dt.getDate()).padStart(2, "0")}`;
+                    };
                     btn.textContent = s && e ? `📅 ${fmt(s)} – ${fmt(e)}` : s ? `📅 From ${fmt(s)}` : `📅 Until ${fmt(e)}`;
                     btn.classList.add("active");
                 }
@@ -969,11 +1032,28 @@ map.on("load", () => {
                 popup.classList.toggle("open");
                 if (popup.classList.contains("open")) {
                     renderCalendar();
-                    // On mobile, position popup below the topbar
                     if (window.innerWidth < 768) {
                         const topbar = document.getElementById("topbar");
-                        const topbarBottom = topbar ? topbar.getBoundingClientRect().bottom : 56;
-                        popup.style.top = (topbarBottom + 4) + "px";
+                        const filtersWrap = document.getElementById("filters-wrap");
+                        const useFilters = filtersWrap && topbar && !topbar.classList.contains("filters-collapsed");
+                        const anchor = useFilters ? filtersWrap : topbar;
+                        const anchorBottom = anchor.getBoundingClientRect().bottom;
+
+                        const vw = window.innerWidth;
+                        const vh = window.innerHeight;
+                        // Width: fits screen with margin, capped by viewport height ratio
+                        const maxWidth = Math.min(vw - 16, Math.round(vh * 0.55));
+                        // Height: never exceeds remaining viewport space below the popup top
+                        const popupTop = anchorBottom - 100;
+                        const maxHeight = vh - popupTop - 16;
+
+                        popup.style.top = popupTop + "px";
+                        popup.style.left = "50%";
+                        popup.style.right = "auto";
+                        popup.style.transform = "translateX(-50%)";
+                        popup.style.width = maxWidth + "px";
+                        popup.style.maxHeight = maxHeight + "px";
+                        popup.style.overflowY = "auto";
                     }
                 }
             });
@@ -1064,11 +1144,36 @@ map.on("load", () => {
         }
 
         // Close any open popup when switching layers
-        document.querySelectorAll(".layer-seg-btn").forEach(btn => {
+        document.querySelectorAll(".layer-seg-btn[data-layer]").forEach(btn => {
             btn.addEventListener("click", () => {
                 if (activePopup) { activePopup.remove(); activePopup = null; }
             });
         }, true);
+
+        // Mobile filter toggle
+        const filterToggleBtn = document.getElementById("filterToggleBtn");
+        const topbar = document.getElementById("topbar");
+        if (filterToggleBtn && topbar) {
+            filterToggleBtn.addEventListener("click", () => {
+                topbar.classList.toggle("filters-collapsed");
+                // Resize sidebar to account for the filter overlay
+                setTimeout(updateSidebarMaxHeight, 50);
+                setTimeout(updateSidebarMaxHeight, 320);
+            });
+        }
+
+        // Bed filter buttons
+        document.querySelectorAll(".bed-seg .layer-seg-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                // Sync both desktop and mobile bed filters
+                document.querySelectorAll(".bed-seg .layer-seg-btn").forEach(b =>
+                    b.classList.toggle("active", b.dataset.beds === btn.dataset.beds)
+                );
+                const beds = btn.dataset.beds;
+                map.getSource("apartments").setData(buildApartmentGeoJSON(apartments, currentMax, currentMin, beds));
+                populateSidebarApartments(apartments, currentMax, currentMin, beds);
+            });
+        });
 
         // All layer toggle buttons (desktop + mobile both use .layer-seg-btn)
         const sidebarToggleBtn = document.getElementById("sidebar-toggle");
@@ -1080,10 +1185,10 @@ map.on("load", () => {
             sidebar.classList.toggle("evt-active", layer === "events");
         }
 
-        document.querySelectorAll(".layer-seg-btn").forEach(btn => {
+        document.querySelectorAll(".layer-seg-btn[data-layer]").forEach(btn => {
             btn.addEventListener("click", () => {
                 const layer = btn.dataset.layer;
-                document.querySelectorAll(".layer-seg-btn").forEach(b =>
+                document.querySelectorAll(".layer-seg-btn[data-layer]").forEach(b =>
                     b.classList.toggle("active", b.dataset.layer === layer)
                 );
                 updateSidebarToggleColor(layer);

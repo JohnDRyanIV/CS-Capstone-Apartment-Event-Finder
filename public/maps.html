@@ -17,17 +17,36 @@
     </header>
 
 <!-- ── Mobile topbar (hidden on md+) ──────────────────────────────────────── -->
-<div id="topbar" class="d-flex d-md-none flex-column px-3 py-2 gap-2">
+<div id="topbar" class="d-flex d-md-none flex-column px-3 py-2 gap-2 filters-collapsed">
 
-    <!-- Row 1: Segmented layer toggle -->
-    <div class="layer-seg" style="width:100%">
-        <button class="layer-seg-btn active" id="seg-apartments" data-layer="apartments"><span class="dot dot-apt"></span> Apartments</button>
-        <button class="layer-seg-btn" id="seg-events" data-layer="events"><span class="dot dot-evt"></span> Events</button>
+    <!-- Row 1: Segmented layer toggle + filter toggle -->
+    <div class="d-flex align-items-stretch gap-2" style="width:100%">
+        <div class="layer-seg" style="flex:1">
+            <button class="layer-seg-btn active" id="seg-apartments" data-layer="apartments"><span class="dot dot-apt"></span> Apartments</button>
+            <button class="layer-seg-btn" id="seg-events" data-layer="events"><span class="dot dot-evt"></span> Events</button>
+        </div>
+        <button class="filter-toggle-btn" id="filterToggleBtn" aria-label="Toggle filters">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+            </svg>
+        </button>
     </div>
+
+    <!-- Row 2: Filters wrapper (animated) -->
+    <div id="filters-wrap">
 
     <!-- Row 2: Filters -->
     <!-- Apartment filters (mobile) -->
-    <div id="apt-filters-mobile" class="mobile-filter-row">
+    <div id="apt-filters-mobile" class="d-flex flex-column gap-2">
+        <div class="layer-seg bed-seg" id="bedFilterMobile">
+            <button class="layer-seg-btn active" data-beds="any">Any</button>
+            <button class="layer-seg-btn" data-beds="studio">Studio</button>
+            <button class="layer-seg-btn" data-beds="1">1</button>
+            <button class="layer-seg-btn" data-beds="2">2</button>
+            <button class="layer-seg-btn" data-beds="3">3</button>
+            <button class="layer-seg-btn" data-beds="4+">4+</button>
+        </div>
+        <div class="mobile-filter-row">
         <span class="mobile-filter-label">Rent</span>
         <div class="price-range-sliders" style="flex:1;margin:0 4px">
             <div class="price-range-track"></div>
@@ -40,6 +59,7 @@
             <span id="priceValueDisplay">$4,000</span>
         </div>
         <input type="hidden" id="priceValueMobile">
+        </div>
     </div>
 
     <!-- Event filters (mobile) -->
@@ -71,6 +91,7 @@
         </div>
         <input type="hidden" id="eventCategoryFilterMobile">
     </div>
+    </div>
 </div>
 
 <!-- ── Main content (map + sidebar) ───────────────────────────────────────── -->
@@ -84,7 +105,16 @@
         </div>
 
         <div id="apt-filters-desktop" class="d-flex flex-column gap-1 pt-2 border-top">
-            <strong class="small">Rent</strong>
+            <strong class="small">Beds</strong>
+            <div class="layer-seg bed-seg" id="bedFilterDesktop">
+                <button class="layer-seg-btn active" data-beds="any">Any</button>
+                <button class="layer-seg-btn" data-beds="studio">Studio</button>
+                <button class="layer-seg-btn" data-beds="1">1</button>
+                <button class="layer-seg-btn" data-beds="2">2</button>
+                <button class="layer-seg-btn" data-beds="3">3</button>
+                <button class="layer-seg-btn" data-beds="4+">4+</button>
+            </div>
+            <strong class="small mt-1">Rent</strong>
             <div class="price-range-wrap">
                 <div class="price-range-labels">
                     <span id="priceMinDisplay">$500</span>
@@ -134,7 +164,7 @@
     <div id="map"></div>
 
     <!-- Sidebar -->
-    <div id="sidebar">
+    <div id="sidebar" class="collapsed">
         <button id="sidebar-toggle" aria-label="Toggle sidebar">▲ Show List</button>
         <div id="sidebar-header" class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom flex-shrink-0">
             <div>

@@ -642,6 +642,9 @@
   <p class="hero-sub">Everything new grads and relocators need to know about finding apartments, budgeting smart, and settling into a new city.</p>
 </div>
 
+<!-- Anchor for tab clicks -->
+<div id="tab-anchor"></div>
+
 <!-- NAV TABS -->
 <div class="tab-nav-wrap">
 <nav class="tab-nav">
@@ -1257,11 +1260,11 @@
     const btnCenter = activeBtn.offsetLeft + activeBtn.offsetWidth / 2;
     nav.scrollTo({ left: btnCenter - navRect.width / 2, behavior: 'smooth' });
 
-    // Scroll page so content appears just below the sticky tab nav
-    const tabWrap = document.querySelector('.tab-nav-wrap');
-    const pageScroll = document.querySelector('.page-scroll');
-    const tabNavHeight = tabWrap.getBoundingClientRect().height;
-    pageScroll.scrollTo({ top: tabWrap.offsetTop - tabNavHeight, behavior: 'smooth' });
+    // Scroll to the anchor between hero and tab nav
+    const anchor = document.getElementById('tab-anchor');
+    if (anchor) {
+        anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 </script>
 </body>
