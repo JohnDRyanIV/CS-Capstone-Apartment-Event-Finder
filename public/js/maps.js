@@ -99,10 +99,18 @@ function buildEventCategoryFilters(categories, selectId, onSelect) {
         list.appendChild(li);
     });
 
-    // Toggle open/close
+    // Toggle open/close — scroll filter row into view on mobile when opening
     btn.addEventListener("click", (e) => {
         e.stopPropagation();
         wrap.classList.toggle("open");
+        if (wrap.classList.contains("open") && window.innerWidth < 768) {
+            // Scroll the filter row so the dropdown wrap is visible
+            const filterRow = wrap.closest(".mobile-filter-row");
+            if (filterRow) {
+                const wrapLeft = wrap.offsetLeft;
+                filterRow.scrollTo({ left: wrapLeft - 8, behavior: "smooth" });
+            }
+        }
     });
 
     // Select item
@@ -389,8 +397,8 @@ function populateSidebarApartments(apartments, maxPrice, minPrice = 0) {
             if (e.target.closest(".favorite-btn")) return;
             document.querySelectorAll(".sidebar-card").forEach(c => c.classList.remove("active"));
             card.classList.add("active");
-            map.flyTo({ center: [apt.lon, apt.lat], zoom: 15, duration: 600 });
-            const popup = new mapboxgl.Popup({ offset: 12, maxWidth: "320px" })
+            map.flyTo({ center: [apt.lon, apt.lat], zoom: 15, duration: 600, padding: isMobile() ? { top: 220, bottom: 60, left: 20, right: 20 } : { top: 80, bottom: 40, left: 40, right: 40 } });
+            const popup = new mapboxgl.Popup({ offset: 12, maxWidth: isMobile() ? (window.innerWidth - 32) + "px" : "320px" })
                 .setLngLat([apt.lon, apt.lat])
                 .setHTML(buildAptPopupHTML(apt));
             openPopup(popup, true);
@@ -418,9 +426,9 @@ function populateSidebarEvents(events) {
             if (e.target.closest(".favorite-btn")) return;
             document.querySelectorAll(".sidebar-card").forEach(c => c.classList.remove("active"));
             card.classList.add("active");
-            map.flyTo({ center: [ev.longitude, ev.latitude], zoom: 15, duration: 600 });
+            map.flyTo({ center: [ev.longitude, ev.latitude], zoom: 15, duration: 600, padding: isMobile() ? { top: 220, bottom: 60, left: 20, right: 20 } : { top: 80, bottom: 40, left: 40, right: 40 } });
             const eventsAtLocation = eventGroups[`${ev.longitude},${ev.latitude}`] || [ev];
-            const popup = new mapboxgl.Popup({ offset: 12, maxWidth: "380px" })
+            const popup = new mapboxgl.Popup({ offset: 12, maxWidth: isMobile() ? (window.innerWidth - 32) + "px" : "380px" })
                 .setLngLat([ev.longitude, ev.latitude])
                 .setDOMContent(buildEventCarouselNode(eventsAtLocation));
             openPopup(popup, true);
@@ -766,7 +774,8 @@ map.on("load", () => {
             const apt = aptId && aptById[aptId];
             while (Math.abs(e.lngLat.lng - coords[0]) > 180)
                 coords[0] += e.lngLat.lng > coords[0] ? 360 : -360;
-            openPopup(new mapboxgl.Popup({ offset: 12, maxWidth: "320px" })
+            if (isMobile()) map.flyTo({ center: coords, zoom: map.getZoom(), padding: { top: 220, bottom: 60, left: 20, right: 20 }, duration: 400 });
+            openPopup(new mapboxgl.Popup({ offset: 12, maxWidth: isMobile() ? (window.innerWidth - 32) + "px" : "320px" })
                 .setLngLat(coords)
                 .setHTML(apt ? buildAptPopupHTML(apt) : "<div class='apt-popup'><h3>Apartment</h3></div>"), false);
         });
@@ -1006,7 +1015,8 @@ map.on("load", () => {
             while (Math.abs(e.lngLat.lng - coords[0]) > 180)
                 coords[0] += e.lngLat.lng > coords[0] ? 360 : -360;
             const eventsAtLocation = eventGroups[coordKey] || [];
-            openPopup(new mapboxgl.Popup({ offset: 12, maxWidth: "380px" })
+            if (isMobile()) map.flyTo({ center: coords, zoom: map.getZoom(), padding: { top: 220, bottom: 60, left: 20, right: 20 }, duration: 400 });
+            openPopup(new mapboxgl.Popup({ offset: 12, maxWidth: isMobile() ? (window.innerWidth - 32) + "px" : "380px" })
                 .setLngLat(coords).setDOMContent(buildEventCarouselNode(eventsAtLocation)), false);
         });
 
@@ -1028,6 +1038,9 @@ map.on("load", () => {
             aptFiltersMobile.classList.toggle("d-flex",   showApts);
             evtFiltersMobile.classList.toggle("d-none",   showApts);
             evtFiltersMobile.classList.toggle("d-flex",  !showApts);
+
+            // Recalculate sidebar height since topbar height may change
+            setTimeout(updateSidebarMaxHeight, 50);
 
             if (showApts) {
                 populateSidebarApartments(apartments, currentMax, currentMin);

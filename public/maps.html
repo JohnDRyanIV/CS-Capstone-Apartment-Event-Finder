@@ -17,15 +17,16 @@
     </header>
 
 <!-- ── Mobile topbar (hidden on md+) ──────────────────────────────────────── -->
-<div id="topbar" class="d-flex d-md-none align-items-center gap-2 px-3 py-2">
+<div id="topbar" class="d-flex d-md-none flex-column px-3 py-2 gap-2">
 
-    <!-- Segmented layer toggle -->
-    <div class="layer-seg">
-        <button class="layer-seg-btn active" id="seg-apartments" data-layer="apartments">🟢 Apts</button>
+    <!-- Row 1: Segmented layer toggle -->
+    <div class="layer-seg" style="width:100%">
+        <button class="layer-seg-btn active" id="seg-apartments" data-layer="apartments">🟢 Apartments</button>
         <button class="layer-seg-btn" id="seg-events" data-layer="events">🟠 Events</button>
     </div>
 
-    <!-- Apartment filters (mobile) — one line -->
+    <!-- Row 2: Filters -->
+    <!-- Apartment filters (mobile) -->
     <div id="apt-filters-mobile" class="mobile-filter-row">
         <span class="mobile-filter-label">Rent</span>
         <div class="price-range-sliders" style="flex:1;margin:0 4px">
@@ -38,7 +39,7 @@
         <input type="hidden" id="priceValueMobile">
     </div>
 
-    <!-- Event filters (mobile) — one line -->
+    <!-- Event filters (mobile) -->
     <div id="evt-filters-mobile" class="mobile-filter-row d-none">
         <div class="position-relative">
             <button class="date-range-btn" id="dateRangeBtnMobile">📅 All Dates</button>

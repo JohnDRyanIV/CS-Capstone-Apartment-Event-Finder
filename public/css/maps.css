@@ -569,9 +569,19 @@ body #site-nav { position: relative; top: auto; left: auto; right: auto; }
     display: flex;
     align-items: center;
     gap: 8px;
-    flex: 1;
+    width: 100%;
     min-width: 0;
     overflow: visible;
+}
+
+.mobile-filter-row > * {
+    flex-shrink: 0;
+}
+
+/* But let the price range slider still stretch */
+.mobile-filter-row .price-range-sliders {
+    flex-shrink: 1;
+    min-width: 60px;
 }
 
 .mobile-filter-row .form-range {
@@ -1048,4 +1058,42 @@ input[type="range"].form-range::-moz-range-track {
 
 #sidebar.evt-active #sidebar-list::-webkit-scrollbar-thumb:hover {
     background: #c4623a;
+}
+
+/* ── Mobile event filter row — full width layout ───────────────────────────── */
+#evt-filters-mobile .custom-select-wrap {
+    flex: 1;
+    min-width: 0;
+}
+
+#evt-filters-mobile .date-range-btn {
+    white-space: nowrap;
+}
+
+/* ── Mobile layer seg — full width, centered text ──────────────────────────── */
+#topbar .layer-seg {
+    width: 100%;
+}
+
+#topbar .layer-seg .layer-seg-btn {
+    flex: 1;
+    text-align: center;
+}
+
+/* ── Mobile popup constraints ──────────────────────────────────────────────── */
+@media (max-width: 767px) {
+    .mapboxgl-popup {
+        max-width: calc(100vw - 24px) !important;
+    }
+
+    .mapboxgl-popup-content {
+        max-width: calc(100vw - 24px);
+        box-sizing: border-box;
+    }
+
+    .apt-popup,
+    .popup-carousel {
+        max-width: calc(100vw - 48px);
+        box-sizing: border-box;
+    }
 }
