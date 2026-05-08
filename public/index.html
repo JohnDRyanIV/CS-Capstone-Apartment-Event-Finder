@@ -6,6 +6,7 @@
 <title>Pocket Movers — Your Move, Simplified</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+  html { scroll-behavior: smooth; }
   :root {
     --cream: #f5f0e8;
     --ink: #1a1612;
@@ -168,6 +169,9 @@
     text-decoration: none;
     border: 1px solid var(--border);
     transition: transform 0.2s, border-color 0.2s;
+    min-width: 260px;
+    text-align: center;
+    box-sizing: border-box;
   }
   .btn-secondary:hover {
     transform: translateY(-2px);

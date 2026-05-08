@@ -38,13 +38,9 @@ function showDbToast(message) {
 }
 
 async function checkAuthStatus() {
-    try {
-        const res = await fetch("/api/auth", { credentials: "include" });
-        if (res.status === 401) {
-            // Cookie exists but session is invalid/expired — update UI
-            document.querySelectorAll(".requires-auth").forEach(el => el.style.display = "none");
-        }
-    } catch (e) {}
+    // Auth state is provided server-side via Jinja templates (is_logged_in).
+    // This function is kept as a no-op for backward compatibility with any
+    // future endpoint we may add.
 }
 
 document.addEventListener("DOMContentLoaded", checkAuthStatus);
